@@ -1,0 +1,68 @@
+import { redirect, notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { LayoutDashboard } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { MOCK_PENDING_LISTINGS } from "@/data/listings";
+import AdminPendingQueue from "@/components/admin/AdminPendingQueue";
+import Badge from "@/components/ui/Badge";
+
+export const metadata: Metadata = {
+  title: "Administration – Annonces en attente",
+};
+
+export default async function AdminPendingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // proxy.ts already redirects unauthenticated requests, but a second check
+  // here gives a hard 404 if someone bypasses it (e.g. during SSG/ISR)
+  if (!user) redirect("/login?next=/admin/pending");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.is_admin) notFound();
+
+  // ── Runtime: use DB data ────────────────────────────────────
+  // When DB is live, replace mock with:
+  //   const { data: rows } = await supabase
+  //     .from("listings")
+  //     .select("*, listing_images(url, order), profiles!seller_id(*), listing_reports(count)")
+  //     .eq("status", "pending")
+  //     .order("created_at", { ascending: true })
+  //   const pendingListings = (rows ?? []).map(r => mapJoinedListingToListing(r))
+  //
+  // ── Dev fallback (DB not yet live) ─────────────────────────
+  const pendingListings = MOCK_PENDING_LISTINGS;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Admin top bar */}
+      <div className="bg-gray-900 text-white px-4 py-3">
+        <div className="max-w-5xl mx-auto flex items-center gap-3">
+          <LayoutDashboard className="h-4 w-4 text-gray-400" />
+          <span className="text-sm font-medium">Administration NouMarket</span>
+          <Badge variant="warning" className="ml-auto">
+            Mode Admin
+          </Badge>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Annonces en attente</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Examinez et modérez les annonces soumises par les utilisateurs.
+          </p>
+        </div>
+
+        <AdminPendingQueue initialListings={pendingListings} />
+      </div>
+    </div>
+  );
+}
