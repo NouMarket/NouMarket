@@ -39,6 +39,7 @@ export function mapDbListingToListing(
 
   return {
     id: listing.id,
+    slug: listing.slug,
     title: listing.title,
     description: listing.description,
     price: Number(listing.price), // DB is bigint; real gen-types may return string

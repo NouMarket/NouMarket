@@ -37,6 +37,7 @@ export type Seller = {
 
 export type Listing = {
   id: string;
+  slug: string; // human-readable URL segment, unique in DB
   title: string;
   description: string;
   price: number;

@@ -24,7 +24,7 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
   return (
     <div className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
       {/* Image */}
-      <Link href={`/listings/${listing.id}`} className="block">
+      <Link href={`/listings/${listing.slug}`} className="block">
         <div className={cn("relative bg-gray-100 overflow-hidden", compact ? "h-40" : "h-52")}>
           {!imgError ? (
             <Image
@@ -60,7 +60,7 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
       </button>
 
       {/* Content */}
-      <Link href={`/listings/${listing.id}`} className="block p-4">
+      <Link href={`/listings/${listing.slug}`} className="block p-4">
         {/* Price */}
         <div className="mb-1.5">
           <span className={cn("font-bold", listing.price === 0 ? "text-gray-600" : "text-gray-900 text-base")}>

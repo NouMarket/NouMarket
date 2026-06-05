@@ -12,9 +12,12 @@ import {
   Share2,
   Tag,
   Star,
+  CheckCircle,
 } from "lucide-react";
-import { getListingById, MOCK_LISTINGS } from "@/data/listings";
+import { createClient } from "@/lib/supabase/server";
+import { MOCK_LISTINGS } from "@/data/listings";
 import { getCategoryBySlug } from "@/data/categories";
+import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import {
   formatPrice,
   formatDate,
@@ -22,21 +25,57 @@ import {
   trustLevelColor,
   conditionLabel,
 } from "@/lib/utils";
+import type { Listing } from "@/types";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import ListingGrid from "@/components/listings/ListingGrid";
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ submitted?: string }>;
 }
 
-export async function generateStaticParams() {
-  return MOCK_LISTINGS.map((l) => ({ id: l.id }));
+/** Fetch by slug from Supabase; fall back to mock data if DB is unavailable. */
+async function getListing(slug: string): Promise<Listing | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*, listing_images(url, order), profiles!seller_id(*)")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !data) {
+    // DB not reachable or listing not found — try mock data
+    return MOCK_LISTINGS.find((l) => l.slug === slug) ?? null;
+  }
+
+  return mapJoinedListingToListing(data as JoinedListing);
+}
+
+/** Fetch related listings (same category) from Supabase, fall back to mock. */
+async function getRelated(categorySlug: string, excludeSlug: string): Promise<Listing[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*, listing_images(url, order), profiles!seller_id(*)")
+    .eq("status", "active")
+    .eq("category_slug", categorySlug)
+    .neq("slug", excludeSlug)
+    .order("created_at", { ascending: false })
+    .limit(4);
+
+  if (error || !data) {
+    return MOCK_LISTINGS.filter(
+      (l) => l.categorySlug === categorySlug && l.slug !== excludeSlug
+    ).slice(0, 4);
+  }
+
+  return (data as JoinedListing[]).map(mapJoinedListingToListing);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const listing = getListingById(id);
+  const { slug } = await params;
+  const listing = await getListing(slug);
   if (!listing) return {};
   return {
     title: listing.title,
@@ -44,22 +83,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ListingDetailPage({ params }: Props) {
-  const { id } = await params;
-  const listing = getListingById(id);
+export default async function ListingDetailPage({ params, searchParams }: Props) {
+  const { slug } = await params;
+  const { submitted } = await searchParams;
+  const listing = await getListing(slug);
   if (!listing) notFound();
 
   const category = getCategoryBySlug(listing.categorySlug);
   const trustColor = trustLevelColor(listing.seller.trustLevel);
   const trustLabel = trustLevelLabel(listing.seller.trustLevel);
-
-  // Related listings (same category, different id)
-  const related = MOCK_LISTINGS.filter(
-    (l) => l.categorySlug === listing.categorySlug && l.id !== listing.id
-  ).slice(0, 4);
+  const related = await getRelated(listing.categorySlug, slug);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Submission success banner */}
+      {submitted && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-3 text-green-700">
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">Annonce soumise avec succès !</p>
+            <p className="text-xs text-green-600 mt-0.5">
+              Notre équipe la vérifiera sous 24h avant publication.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-6 flex-wrap">
         <Link href="/" className="hover:text-gray-700">Accueil</Link>

@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { getFeaturedListings } from "@/data/listings";
+import type { Listing } from "@/types";
 import ListingCard from "@/components/listings/ListingCard";
 
-export default function FeaturedListings() {
-  const listings = getFeaturedListings();
+interface Props {
+  listings: Listing[];
+}
+
+export default function FeaturedListings({ listings }: Props) {
+  if (listings.length === 0) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -21,7 +25,6 @@ export default function FeaturedListings() {
         </Link>
       </div>
 
-      {/* Premium horizontal scroll on mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {listings.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />

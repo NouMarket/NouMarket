@@ -1,3 +1,6 @@
+export const FREE_IMAGE_LIMIT = 5;
+export const PREMIUM_IMAGE_LIMIT = 20;
+
 export const SITE_NAME = "NouMarket";
 export const SITE_DESCRIPTION =
   "La marketplace locale de Nouvelle-Calédonie. Achetez, vendez, louez et découvrez des annonces près de chez vous.";

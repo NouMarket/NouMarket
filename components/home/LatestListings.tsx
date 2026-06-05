@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { getLatestListings } from "@/data/listings";
+import type { Listing } from "@/types";
 import ListingGrid from "@/components/listings/ListingGrid";
 
-export default function LatestListings() {
-  const listings = getLatestListings(8);
+interface Props {
+  listings: Listing[];
+}
 
+export default function LatestListings({ listings }: Props) {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="flex items-center justify-between mb-6">

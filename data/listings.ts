@@ -46,6 +46,7 @@ const MOCK_SELLERS = [
 export const MOCK_LISTINGS: Listing[] = [
   {
     id: "1",
+    slug: "appartement-vue-mer-anse-vata-a1b2c3",
     title: "Appartement vue mer – Anse Vata",
     description:
       "Superbe appartement T3 avec vue panoramique sur le lagon. Cuisine équipée, terrasse, parking. Résidence sécurisée avec piscine.",
@@ -68,6 +69,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "2",
+    slug: "toyota-hilux-2021-double-cab-4x4-d2e3f4",
     title: "Toyota Hilux 2021 – Double Cab 4x4",
     description:
       "Toyota Hilux en excellent état, 45 000 km, boîte automatique, climatisation, GPS. Parfait pour les routes du territoire.",
@@ -90,6 +92,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "3",
+    slug: "iphone-15-pro-max-256-go-titane-e3f4a5",
     title: "iPhone 15 Pro Max 256 Go – Titane",
     description:
       "iPhone 15 Pro Max 256 Go Titane Naturel, acheté en janvier 2024. Avec boîte originale, câble USB-C et AppleCare+.",
@@ -111,6 +114,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "4",
+    slug: "catamaran-38-pieds-grand-lagon-f4a5b6",
     title: "Catamaran 38 pieds – Grand Lagon",
     description:
       "Catamaran Leopard 38 entièrement révisé. Moteurs neufs, voiles 2022, équipement complet. Basé à Port Moselle.",
@@ -133,6 +137,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "5",
+    slug: "canape-angle-tissu-gris-clair-a5b6c7",
     title: "Canapé d'angle en tissu – Gris clair",
     description:
       "Canapé d'angle 5 places, tissu microfibre gris clair, très bon état. Vendu car déménagement. À récupérer sur place.",
@@ -155,6 +160,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "6",
+    slug: "robe-soiree-chanel-taille-38-b6c7d8",
     title: "Robe de soirée Chanel – Taille 38",
     description:
       "Magnifique robe Chanel noir, portée une seule fois pour un mariage. Taille 38, état impeccable avec étiquette.",
@@ -176,6 +182,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "7",
+    slug: "developpeur-web-full-stack-cdi-c7d8e9",
     title: "Développeur Web Full-Stack – CDI",
     description:
       "Startup locale cherche développeur Full-Stack React/Node.js. Télétravail partiel possible. Salaire attractif selon profil.",
@@ -197,6 +204,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "8",
+    slug: "plombier-interventions-rapides-noumea-d8e9f0",
     title: "Plombier – Interventions rapides Nouméa",
     description:
       "Plombier certifié, disponible 6j/7, interventions en moins de 2h sur Nouméa et Grand Nouméa. Devis gratuit.",
@@ -218,6 +226,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "9",
+    slug: "villa-f4-piscine-mont-dore-e9f0a1",
     title: "Villa F4 avec piscine – Mont-Dore",
     description:
       "Splendide villa de 150m² avec piscine, jardin paysagé, 4 chambres, 2 salles de bain. Vue sur le lagon.",
@@ -239,6 +248,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "10",
+    slug: "macbook-pro-m3-14-pouces-16-go-f0a1b2",
     title: "MacBook Pro M3 – 14 pouces, 16 Go",
     description:
       "MacBook Pro M3, 14 pouces, 16 Go RAM, 512 Go SSD. Acheté en octobre 2024, sous garantie Apple. Facture disponible.",
@@ -260,6 +270,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "11",
+    slug: "scooter-yamaha-nmax-155-2022-a1b2c3d",
     title: "Scooter Yamaha NMAX 155 – 2022",
     description:
       "Scooter Yamaha NMAX 155 en parfait état. 12 000 km, révisé, pneus neufs. Idéal pour Nouméa.",
@@ -282,6 +293,7 @@ export const MOCK_LISTINGS: Listing[] = [
   },
   {
     id: "12",
+    slug: "restaurant-fonds-commerce-reprendre-b2c3d4",
     title: "Restaurant – Fonds de commerce à reprendre",
     description:
       "Restaurant de 60 couverts en plein centre-ville, cuisine équipée, clientèle fidèle. Bail commercial 3/6/9.",
@@ -307,6 +319,7 @@ export const MOCK_LISTINGS: Listing[] = [
 export const MOCK_PENDING_LISTINGS: Listing[] = [
   {
     id: "p-1",
+    slug: "terrain-constructible-bourail-c3d4e5",
     title: "Terrain constructible – Bourail",
     description: "Terrain de 800m² viabilisé, vue mer, à 5 min du bourg. Permis de construire disponible.",
     price: 12000000,
@@ -324,6 +337,7 @@ export const MOCK_PENDING_LISTINGS: Listing[] = [
   },
   {
     id: "p-2",
+    slug: "ps5-3-jeux-parfait-etat-d4e5f6",
     title: "PS5 avec 3 jeux – Parfait état",
     description: "PlayStation 5 disc edition, 3 manettes, 3 jeux inclus. Acheté en 2022.",
     price: 65000,
@@ -341,6 +355,7 @@ export const MOCK_PENDING_LISTINGS: Listing[] = [
   },
   {
     id: "p-3",
+    slug: "cours-kite-surf-lifou-e5f6a7",
     title: "Cours de kite surf – Lifou",
     description: "Stage initiation kite surf, 5 heures de cours, matériel fourni. Plage de Luengoni.",
     price: 15000,

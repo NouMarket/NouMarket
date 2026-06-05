@@ -4,13 +4,21 @@ import Link from "next/link";
 import { SlidersHorizontal, ChevronRight } from "lucide-react";
 import { getCategoryBySlug, CATEGORIES } from "@/data/categories";
 import { getListingsByCategory } from "@/data/listings";
+import { createClient } from "@/lib/supabase/server";
+import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
+import type { Listing } from "@/types";
 import ListingGrid from "@/components/listings/ListingGrid";
 import { SORT_OPTIONS } from "@/lib/constants";
+
+// ISR: revalidate category pages every 60 seconds
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// Keep generateStaticParams so Next.js pre-renders all 9 category shells at build time.
+// ISR keeps them fresh without a full rebuild.
 export async function generateStaticParams() {
   return CATEGORIES.map((cat) => ({ slug: cat.slug }));
 }
@@ -25,12 +33,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+async function fetchListingsByCategory(categorySlug: string): Promise<Listing[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*, listing_images(url, order), profiles!seller_id(*)")
+      .eq("status", "active")
+      .eq("category_slug", categorySlug)
+      .order("created_at", { ascending: false });
+    if (error || !data || data.length === 0) return getListingsByCategory(categorySlug);
+    return (data as JoinedListing[]).map(mapJoinedListingToListing);
+  } catch {
+    return getListingsByCategory(categorySlug);
+  }
+}
+
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
   const category = getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const listings = getListingsByCategory(slug);
+  const listings = await fetchListingsByCategory(slug);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

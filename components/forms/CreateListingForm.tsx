@@ -2,31 +2,41 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronLeft, ChevronRight, Upload, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { CATEGORIES } from "@/data/categories";
 import { ALL_LOCATIONS } from "@/data/locations";
-import { CONDITION_OPTIONS } from "@/lib/constants";
+import { CONDITION_OPTIONS, FREE_IMAGE_LIMIT } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
-import { CreateListingFormData } from "@/types";
+import { createListing, type CreateListingPayload } from "@/app/actions/listings";
+import { useAuth } from "@/components/providers/AuthProvider";
+import ImageUploader from "@/components/forms/ImageUploader";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 
 const TOTAL_STEPS = 5;
+const STEP_LABELS = ["Catégorie", "Détails", "Prix & lieu", "Photos", "Aperçu"];
 
-const STEP_LABELS = [
-  "Catégorie",
-  "Détails",
-  "Prix & lieu",
-  "Photos",
-  "Aperçu",
-];
-
-type FormState = Omit<CreateListingFormData, "images"> & {
+type FormState = {
+  categorySlug: string;
+  title: string;
+  description: string;
+  condition: string;
+  price: number;
+  priceNegotiable: boolean;
+  locationId: string;
   imageUrls: string[];
+  /** Client-generated UUID — becomes the listing id and the Storage folder prefix */
+  pendingListingId: string;
 };
 
-const EMPTY_FORM: FormState = {
+function generatePendingId(): string {
+  return typeof crypto !== "undefined"
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+const EMPTY_FORM = (): FormState => ({
   categorySlug: "",
   title: "",
   description: "",
@@ -35,14 +45,17 @@ const EMPTY_FORM: FormState = {
   priceNegotiable: false,
   locationId: "",
   imageUrls: [],
-};
+  pendingListingId: generatePendingId(),
+});
 
 export default function CreateListingForm() {
   const router = useRouter();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -75,10 +88,33 @@ export default function CreateListingForm() {
 
   async function handleSubmit() {
     setSubmitting(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    router.push("/?submitted=1");
+    setServerError(null);
+
+    const payload: CreateListingPayload = {
+      pendingListingId: form.pendingListingId,
+      categorySlug: form.categorySlug,
+      title: form.title,
+      description: form.description,
+      condition: form.condition,
+      price: form.price,
+      priceNegotiable: form.priceNegotiable,
+      locationId: form.locationId,
+      imageUrls: form.imageUrls,
+    };
+
+    try {
+      const result = await createListing(payload);
+      // If createListing returns (instead of redirecting), it's an error
+      if ("error" in result) {
+        setServerError(result.error);
+        setSubmitting(false);
+      }
+      // On success, createListing redirects — this code won't run
+    } catch {
+      // createListing calls redirect() which throws internally in Next.js —
+      // that's expected and not a real error; ignore it
+      router.refresh();
+    }
   }
 
   const selectedCategory = CATEGORIES.find((c) => c.slug === form.categorySlug);
@@ -238,42 +274,14 @@ export default function CreateListingForm() {
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-1">Photos</h2>
               <p className="text-sm text-gray-500">
-                Ajoutez jusqu&apos;à 8 photos. La première sera l&apos;image principale.
+                Ajoutez jusqu&apos;à {FREE_IMAGE_LIMIT} photos. La première sera l&apos;image principale.
               </p>
             </div>
-
-            {/* Upload area */}
-            <label className="block border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:border-sky-400 hover:bg-sky-50/50 transition-colors">
-              <input type="file" accept="image/*" multiple className="sr-only" disabled />
-              <Upload className="h-8 w-8 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-600">
-                Cliquez pour ajouter des photos
-              </p>
-              <p className="text-xs text-gray-400 mt-1">JPG, PNG – max 5 Mo par photo</p>
-            </label>
-
-            {/* Demo images shown */}
-            <div className="grid grid-cols-4 gap-2">
-              {["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=200&q=80"].map(
-                (url, i) => (
-                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="w-full h-full object-cover" />
-                    <button className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white">
-                      <X className="h-3 w-3" />
-                    </button>
-                    {i === 0 && (
-                      <span className="absolute bottom-1 left-1 text-xs bg-black/60 text-white px-1.5 py-0.5 rounded-full">
-                        Principale
-                      </span>
-                    )}
-                  </div>
-                )
-              )}
-            </div>
-            <p className="text-xs text-gray-400 italic">
-              Note : l&apos;upload de photos sera actif après intégration Supabase Storage.
-            </p>
+            <ImageUploader
+              userId={user?.id ?? ""}
+              listingId={form.pendingListingId}
+              onChange={(urls) => set("imageUrls", urls)}
+            />
           </div>
         )}
 
@@ -284,6 +292,13 @@ export default function CreateListingForm() {
               <h2 className="text-xl font-bold text-gray-900 mb-1">Aperçu & publication</h2>
               <p className="text-sm text-gray-500">Vérifiez votre annonce avant de la publier.</p>
             </div>
+
+            {serverError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+                {serverError}
+              </div>
+            )}
+
             <div className="bg-gray-50 rounded-2xl p-5 space-y-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{selectedCategory?.icon}</span>
@@ -291,8 +306,21 @@ export default function CreateListingForm() {
               </div>
               <div>
                 <p className="font-semibold text-gray-900 text-base">{form.title || "—"}</p>
-                <p className="text-gray-500 mt-1 leading-relaxed">{form.description || "—"}</p>
+                <p className="text-gray-500 mt-1 leading-relaxed line-clamp-3">{form.description || "—"}</p>
               </div>
+              {form.imageUrls.length > 0 && (
+                <div className="flex gap-2">
+                  {form.imageUrls.slice(0, 4).map((url, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={url} alt="" className="w-14 h-14 rounded-lg object-cover" />
+                  ))}
+                  {form.imageUrls.length > 4 && (
+                    <div className="w-14 h-14 rounded-lg bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                      +{form.imageUrls.length - 4}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                 <span className="font-bold text-gray-900 text-lg">
                   {form.price > 0 ? formatPrice(form.price) : "À discuter"}

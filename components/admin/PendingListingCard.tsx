@@ -11,12 +11,14 @@ import Badge from "@/components/ui/Badge";
 
 interface PendingListingCardProps {
   listing: Listing;
+  processing?: boolean;
   onApprove: (id: string) => void;
   onReject: (id: string, reason: string) => void;
 }
 
 export default function PendingListingCard({
   listing,
+  processing = false,
   onApprove,
   onReject,
 }: PendingListingCardProps) {
@@ -90,6 +92,7 @@ export default function PendingListingCard({
                 variant="primary"
                 size="sm"
                 className="gap-1.5"
+                loading={processing}
                 onClick={() => onApprove(listing.id)}
               >
                 <CheckCircle className="h-4 w-4" />
@@ -99,6 +102,7 @@ export default function PendingListingCard({
                 variant="outline"
                 size="sm"
                 className="gap-1.5 text-red-500 hover:text-red-600 border-red-200 hover:border-red-300"
+                disabled={processing}
                 onClick={() => setRejectMode(true)}
               >
                 <XCircle className="h-4 w-4" />

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { Listing } from "@/types";
+import { updateListingStatus } from "@/app/actions/listings";
 import PendingListingCard from "./PendingListingCard";
 import Badge from "@/components/ui/Badge";
 
@@ -19,17 +20,34 @@ interface AdminPendingQueueProps {
 export default function AdminPendingQueue({ initialListings }: AdminPendingQueueProps) {
   const [pending, setPending] = useState<Listing[]>(initialListings);
   const [actioned, setActioned] = useState<ActionedListing[]>([]);
+  const [processing, setProcessing] = useState<string | null>(null);
 
-  function handleApprove(id: string) {
+  async function handleApprove(id: string) {
+    setProcessing(id);
+    const result = await updateListingStatus(id, "active");
+    setProcessing(null);
+
+    if ("error" in result) {
+      alert(result.error);
+      return;
+    }
+
     setPending((prev) => prev.filter((l) => l.id !== id));
     setActioned((prev) => [...prev, { id, action: "approved" }]);
-    // TODO (Phase 5): call updateListingStatus(id, "active") Server Action
   }
 
-  function handleReject(id: string, reason: string) {
+  async function handleReject(id: string, reason: string) {
+    setProcessing(id);
+    const result = await updateListingStatus(id, "rejected", reason);
+    setProcessing(null);
+
+    if ("error" in result) {
+      alert(result.error);
+      return;
+    }
+
     setPending((prev) => prev.filter((l) => l.id !== id));
     setActioned((prev) => [...prev, { id, action: "rejected", reason }]);
-    // TODO (Phase 5): call updateListingStatus(id, "rejected", reason) Server Action
   }
 
   const approved = actioned.filter((a) => a.action === "approved").length;
@@ -75,6 +93,7 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
             <PendingListingCard
               key={listing.id}
               listing={listing}
+              processing={processing === listing.id}
               onApprove={handleApprove}
               onReject={handleReject}
             />
@@ -107,7 +126,7 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
                   <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
                 )}
                 <span className="text-gray-700">
-                  Annonce <span className="font-medium">#{a.id}</span>{" "}
+                  Annonce <span className="font-medium">#{a.id.slice(0, 8)}</span>{" "}
                   {a.action === "approved" ? "approuvée" : "rejetée"}
                   {a.reason && (
                     <span className="text-gray-400"> — {a.reason}</span>
