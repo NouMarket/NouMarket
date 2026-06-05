@@ -136,6 +136,10 @@ export async function updateListingStatus(
   status: "active" | "rejected",
   rejectionReason?: string
 ): Promise<UpdateStatusResult> {
+  if (status === "rejected" && !rejectionReason?.trim()) {
+    return { error: "La raison du rejet est requise." };
+  }
+
   // Verify the caller is an admin via the anon client (reads profiles table)
   const supabase = await createClient();
   const {

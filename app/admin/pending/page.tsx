@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MOCK_PENDING_LISTINGS } from "@/data/listings";
+import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import AdminPendingQueue from "@/components/admin/AdminPendingQueue";
 import Badge from "@/components/ui/Badge";
 
@@ -28,17 +29,16 @@ export default async function AdminPendingPage() {
 
   if (!profile?.is_admin) notFound();
 
-  // ── Runtime: use DB data ────────────────────────────────────
-  // When DB is live, replace mock with:
-  //   const { data: rows } = await supabase
-  //     .from("listings")
-  //     .select("*, listing_images(url, order), profiles!seller_id(*), listing_reports(count)")
-  //     .eq("status", "pending")
-  //     .order("created_at", { ascending: true })
-  //   const pendingListings = (rows ?? []).map(r => mapJoinedListingToListing(r))
-  //
-  // ── Dev fallback (DB not yet live) ─────────────────────────
-  const pendingListings = MOCK_PENDING_LISTINGS;
+  const { data: rows, error: listingsError } = await supabase
+    .from("listings")
+    .select("*, listing_images(url, order), profiles!seller_id(*)")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  const pendingListings =
+    listingsError || !rows
+      ? MOCK_PENDING_LISTINGS
+      : (rows as JoinedListing[]).map(mapJoinedListingToListing);
 
   return (
     <div className="min-h-screen bg-gray-50">
