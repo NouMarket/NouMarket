@@ -1,22 +1,63 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Menu, X, Heart, User, Plus, ChevronDown, LogOut, MessageCircle } from "lucide-react";
 import { CATEGORIES } from "@/data/categories";
 import { SITE_NAME } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { signOut } from "@/app/actions/auth";
 import Button from "@/components/ui/Button";
+import UnreadBadge from "@/components/messages/UnreadBadge";
 
 export default function Header() {
   const { user, profile, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const displayName = profile?.name ?? user?.email?.split("@")[0] ?? "";
   const initials = displayName.charAt(0).toUpperCase();
+  const userId = user?.id;
+  const displayedUnreadCount = userId ? unreadCount : 0;
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const activeUserId = userId;
+    const supabase = createClient();
+    let mounted = true;
+
+    async function fetchUnreadCount() {
+      const { count } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .is("read_at", null)
+        .neq("sender_id", activeUserId);
+
+      if (mounted) setUnreadCount(count ?? 0);
+    }
+
+    void fetchUnreadCount();
+
+    const channel = supabase
+      .channel(`header-unread:${activeUserId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        () => {
+          void fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
@@ -73,10 +114,14 @@ export default function Header() {
             {/* Messages */}
             <Link
               href="/messages"
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               aria-label="Messages"
             >
               <MessageCircle className="h-5 w-5" />
+              <UnreadBadge
+                count={displayedUnreadCount}
+                className="absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]"
+              />
             </Link>
 
             {/* Favorites */}
@@ -209,6 +254,7 @@ export default function Header() {
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50"
             >
               <MessageCircle className="h-4 w-4" /> Messages
+              <UnreadBadge count={displayedUnreadCount} className="ml-auto" />
             </Link>
             <Link
               href="/favorites"

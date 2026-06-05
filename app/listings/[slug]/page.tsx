@@ -7,7 +7,6 @@ import {
   Calendar,
   Eye,
   ChevronRight,
-  MessageCircle,
   Heart,
   Share2,
   Tag,
@@ -29,6 +28,7 @@ import type { Listing } from "@/types";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import ListingGrid from "@/components/listings/ListingGrid";
+import ContactSellerButton from "@/components/messages/ContactSellerButton";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -232,10 +232,13 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
               )}
             </div>
 
-            <Button fullWidth size="lg" className="gap-2 mb-2">
-              <MessageCircle className="h-4 w-4" />
-              Contacter le vendeur
-            </Button>
+            <div className="mb-2">
+              <ContactSellerButton
+                listingId={listing.id}
+                sellerId={listing.seller.id}
+                currentPath={`/listings/${listing.slug}`}
+              />
+            </div>
             <Button fullWidth variant="outline" size="md">
               Faire une offre
             </Button>
