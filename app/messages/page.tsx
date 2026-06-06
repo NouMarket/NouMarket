@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ConversationRow,
@@ -8,6 +9,7 @@ import type {
   ProfileRow,
 } from "@/types/database";
 import ConversationCard from "@/components/messages/ConversationCard";
+import Button from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Messages",
@@ -80,12 +82,17 @@ export default async function MessagesPage() {
 
         {visibleConversations.length === 0 ? (
           <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
+            <div className="text-4xl mb-4">💬</div>
             <h2 className="text-lg font-semibold text-gray-900">
               Aucune conversation
             </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Vos prochains échanges apparaîtront ici.
+            <p className="mt-2 text-sm text-gray-500 mb-6">
+              Trouvez une annonce qui vous intéresse et cliquez sur
+              «&nbsp;Contacter le vendeur&nbsp;» pour démarrer un échange.
             </p>
+            <Link href="/search">
+              <Button>Explorer les annonces</Button>
+            </Link>
           </div>
         ) : (
           <div className="space-y-3">

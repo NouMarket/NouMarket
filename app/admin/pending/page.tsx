@@ -1,12 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MOCK_PENDING_LISTINGS } from "@/data/listings";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import AdminPendingQueue from "@/components/admin/AdminPendingQueue";
-import Badge from "@/components/ui/Badge";
+import AdminNav from "@/components/admin/AdminNav";
 
 export const metadata: Metadata = {
   title: "Administration – Annonces en attente",
@@ -63,22 +61,7 @@ export default async function AdminPendingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Admin top bar */}
-      <div className="bg-gray-900 text-white px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <LayoutDashboard className="h-4 w-4 text-gray-400" />
-          <span className="text-sm font-medium">Administration NouMarket</span>
-          <Link
-            href="/admin/reports"
-            className="ml-auto text-xs text-gray-300 hover:text-white"
-          >
-            Signalements
-          </Link>
-          <Badge variant="warning">
-            Mode Admin
-          </Badge>
-        </div>
-      </div>
+      <AdminNav current="/admin/pending" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">

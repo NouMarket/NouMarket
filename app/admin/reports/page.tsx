@@ -1,10 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Flag } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { adminSupabase } from "@/lib/supabase/admin";
 import type { ListingReportRow, ListingRow, ProfileRow } from "@/types/database";
+import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
 
 export const metadata: Metadata = {
@@ -69,18 +69,7 @@ export default async function AdminReportsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gray-900 px-4 py-3 text-white">
-        <div className="mx-auto flex max-w-5xl items-center gap-3">
-          <Flag className="h-4 w-4 text-gray-400" />
-          <span className="text-sm font-medium">Signalements NouMarket</span>
-          <Link
-            href="/admin/pending"
-            className="ml-auto text-xs text-gray-300 hover:text-white"
-          >
-            Annonces en attente
-          </Link>
-        </div>
-      </div>
+      <AdminNav current="/admin/reports" />
 
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-8">
