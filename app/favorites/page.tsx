@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { MOCK_LISTINGS } from "@/data/listings";
+import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
+import type { Listing } from "@/types";
 import ListingGrid from "@/components/listings/ListingGrid";
 import Button from "@/components/ui/Button";
 
@@ -19,17 +20,36 @@ export default async function FavoritesPage() {
 
   if (!user) redirect("/login?next=/favorites");
 
-  // ── Runtime: use DB data ────────────────────────────────────
-  // When DB is live, replace mock with:
-  //   const { data: rows } = await supabase
-  //     .from("favorites")
-  //     .select("listing_id, listings(*, listing_images(url, order), profiles!seller_id(*))")
-  //     .eq("user_id", user.id)
-  //     .order("created_at", { ascending: false })
-  //   const favorites = (rows ?? []).map(r => mapJoinedListingToListing(r.listings))
-  //
-  // ── Dev fallback (DB not yet live) ─────────────────────────
-  const favorites = MOCK_LISTINGS.slice(0, 3);
+  // Step 1: get favorite listing IDs ordered by when they were saved
+  const { data: favRows } = await supabase
+    .from("favorites")
+    .select("listing_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const favIds = (favRows ?? []).map((r) => r.listing_id);
+
+  // Step 2: fetch the actual listings (only active ones — skip deleted/rejected)
+  let favorites: Listing[] = [];
+  if (favIds.length > 0) {
+    const { data: listingRows } = await supabase
+      .from("listings")
+      .select("*, listing_images(url, order), profiles!seller_id(*)")
+      .in("id", favIds)
+      .eq("status", "active");
+
+    if (listingRows) {
+      // Re-order to match the favorites table order
+      const byId = new Map(
+        (listingRows as JoinedListing[]).map((row) => [row.id, row])
+      );
+      favorites = favIds
+        .filter((id) => byId.has(id))
+        .map((id) => mapJoinedListingToListing(byId.get(id)!));
+    }
+  }
+
+  const favoritedIds = new Set(favorites.map((l) => l.id));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -47,7 +67,7 @@ export default async function FavoritesPage() {
       </div>
 
       {favorites.length > 0 ? (
-        <ListingGrid listings={favorites} />
+        <ListingGrid listings={favorites} favoritedIds={favoritedIds} />
       ) : (
         <div className="text-center py-20">
           <div className="text-5xl mb-4">💔</div>

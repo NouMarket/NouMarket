@@ -94,6 +94,20 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Non-active listings are only visible to the seller or an admin
+  if (listing.status !== "active") {
+    if (!user) notFound();
+    if (user.id !== listing.seller.id) {
+      const { data: profCheck } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+      if (!profCheck?.is_admin) notFound();
+    }
+  }
+
   const category = getCategoryBySlug(listing.categorySlug);
   const trustColor = trustLevelColor(listing.seller.trustLevel);
   const trustLabel = trustLevelLabel(listing.seller.trustLevel);
@@ -102,6 +116,33 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Status banner — shown to seller when their listing is not yet active */}
+      {listing.status !== "active" && user?.id === listing.seller.id && !submitted && (
+        <div
+          className={`mb-6 rounded-2xl border px-5 py-4 text-sm ${
+            listing.status === "pending"
+              ? "bg-amber-50 border-amber-200 text-amber-700"
+              : listing.status === "rejected"
+              ? "bg-red-50 border-red-200 text-red-700"
+              : "bg-gray-50 border-gray-200 text-gray-600"
+          }`}
+        >
+          <p className="font-semibold">
+            {listing.status === "pending" && "Votre annonce est en cours de modération."}
+            {listing.status === "rejected" && "Votre annonce a été rejetée."}
+            {listing.status === "sold" && "Cette annonce est marquée comme vendue."}
+            {listing.status === "expired" && "Cette annonce a expiré."}
+            {listing.status === "archived" && "Cette annonce est archivée."}
+          </p>
+          {listing.status === "pending" && (
+            <p className="text-xs mt-0.5 opacity-80">
+              Elle sera publiée sous 24h après validation par notre équipe. Elle n&apos;est
+              visible que par vous pour l&apos;instant.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Submission success banner */}
       {submitted && (
         <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-3 text-green-700">

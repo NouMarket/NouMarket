@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signIn } from "@/app/actions/auth";
 import Button from "@/components/ui/Button";
@@ -12,7 +12,9 @@ import Button from "@/components/ui/Button";
 // Inner component — uses useSearchParams, must be inside <Suspense>
 function LoginForm() {
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/";
+  const next         = searchParams.get("next") || "/";
+  const oauthError   = searchParams.get("error");
+  const resetSuccess = searchParams.get("reset");
 
   const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -44,6 +46,22 @@ function LoginForm() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        {/* Password reset success */}
+        {resetSuccess && (
+          <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 flex-shrink-0" />
+            Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.
+          </div>
+        )}
+
+        {/* OAuth failure */}
+        {oauthError === "oauth" && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
+            La connexion avec Google a échoué. Réessayez ou utilisez votre adresse e-mail.
+          </div>
+        )}
+
+        {/* Form error */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
             {error}
@@ -99,7 +117,7 @@ function LoginForm() {
           </div>
 
           <div className="flex justify-end">
-            <Link href="#" className="text-xs text-sky-500 hover:text-sky-600">
+            <Link href="/forgot-password" className="text-xs text-sky-500 hover:text-sky-600">
               Mot de passe oublié ?
             </Link>
           </div>

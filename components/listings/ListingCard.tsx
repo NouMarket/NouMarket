@@ -3,19 +3,23 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Heart, MapPin, Eye } from "lucide-react";
+import { MapPin, Eye } from "lucide-react";
 import { Listing } from "@/types";
-import { formatPrice, getRelativeTime, trustLevelLabel, trustLevelColor } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatPrice, getRelativeTime, trustLevelLabel, trustLevelColor, cn } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
+import FavoriteButton from "./FavoriteButton";
 
 interface ListingCardProps {
   listing: Listing;
   compact?: boolean;
+  initialFavorited?: boolean;
 }
 
-export default function ListingCard({ listing, compact = false }: ListingCardProps) {
-  const [favorited, setFavorited] = useState(false);
+export default function ListingCard({
+  listing,
+  compact = false,
+  initialFavorited = false,
+}: ListingCardProps) {
   const [imgError, setImgError] = useState(false);
 
   const trustColor = trustLevelColor(listing.seller.trustLevel);
@@ -26,7 +30,7 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
       {/* Image */}
       <Link href={`/listings/${listing.slug}`} className="block">
         <div className={cn("relative bg-gray-100 overflow-hidden", compact ? "h-40" : "h-52")}>
-          {!imgError ? (
+          {!imgError && listing.images[0] ? (
             <Image
               src={listing.images[0]}
               alt={listing.title}
@@ -49,15 +53,12 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
       </Link>
 
       {/* Favorite button */}
-      <button
-        onClick={() => setFavorited(!favorited)}
-        aria-label={favorited ? "Retirer des favoris" : "Ajouter aux favoris"}
-        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-transform"
-      >
-        <Heart
-          className={cn("h-4 w-4 transition-colors", favorited ? "fill-red-500 text-red-500" : "text-gray-500")}
-        />
-      </button>
+      <FavoriteButton
+        listingId={listing.id}
+        listingPath={`/listings/${listing.slug}`}
+        initialFavorited={initialFavorited}
+        className="absolute top-2 right-2"
+      />
 
       {/* Content */}
       <Link href={`/listings/${listing.slug}`} className="block p-4">
@@ -85,8 +86,12 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
         {/* Footer */}
         <div className="flex items-center justify-between">
           <Badge className={cn("text-xs", trustColor)}>
-            {listing.seller.trustLevel === "pro" ? "🏢" : listing.seller.trustLevel === "trusted" ? "✓" : ""}
-            {" "}{trustLabel}
+            {listing.seller.trustLevel === "pro"
+              ? "🏢"
+              : listing.seller.trustLevel === "trusted"
+              ? "✓"
+              : ""}{" "}
+            {trustLabel}
           </Badge>
           <div className="flex items-center gap-1 text-xs text-gray-400">
             {listing.views != null && (

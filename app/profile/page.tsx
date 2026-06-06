@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Settings, Star, Package, MapPin, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { MOCK_LISTINGS } from "@/data/listings";
+import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import ListingGrid from "@/components/listings/ListingGrid";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -29,17 +29,16 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
-  // ── Runtime: use DB data ────────────────────────────────────
-  // When DB is live, replace MOCK_LISTINGS filter with:
-  //   const { data: listings } = await supabase
-  //     .from("listings")
-  //     .select("*, listing_images(url, order)")
-  //     .eq("seller_id", user.id)
-  //     .order("created_at", { ascending: false })
-  // Then map through mapJoinedListingToListing.
-  //
-  // ── Dev fallback (DB not yet live) ─────────────────────────
-  const myListings = MOCK_LISTINGS.filter((l) => l.seller.id === "seller-1");
+  const { data: listingData, error: listingsError } = await supabase
+    .from("listings")
+    .select("*, listing_images(url, order), profiles!seller_id(*)")
+    .eq("seller_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const myListings =
+    !listingsError && listingData
+      ? (listingData as JoinedListing[]).map(mapJoinedListingToListing)
+      : [];
 
   const displayName = profile?.name ?? user.email?.split("@")[0] ?? "Utilisateur";
   const memberSince = profile?.member_since
@@ -120,7 +119,7 @@ export default async function ProfilePage() {
 
       <ListingGrid
         listings={myListings}
-        emptyMessage="Vous n&apos;avez pas encore d&apos;annonces. Déposez votre première annonce !"
+        emptyMessage="Vous n'avez pas encore d'annonces. Déposez votre première annonce !"
       />
     </div>
   );
