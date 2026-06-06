@@ -52,6 +52,7 @@ export type Listing = {
   updatedAt: string;
   isFeatured?: boolean;
   views?: number;
+  reportCount?: number;
   condition?: "new" | "like_new" | "good" | "fair" | "poor";
   attributes?: Record<string, string>;
 };

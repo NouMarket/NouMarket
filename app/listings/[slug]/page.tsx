@@ -29,6 +29,7 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import ListingGrid from "@/components/listings/ListingGrid";
 import ContactSellerButton from "@/components/messages/ContactSellerButton";
+import ReportListingModal from "@/components/listings/ReportListingModal";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -89,10 +90,15 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
   const listing = await getListing(slug);
   if (!listing) notFound();
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const category = getCategoryBySlug(listing.categorySlug);
   const trustColor = trustLevelColor(listing.seller.trustLevel);
   const trustLabel = trustLevelLabel(listing.seller.trustLevel);
   const related = await getRelated(listing.categorySlug, slug);
+  const canReport = user && user.id !== listing.seller.id;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -281,6 +287,16 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
             <p>• Ne payez pas à l&apos;avance sans voir le bien</p>
             <p>• Utilisez la messagerie NouMarket</p>
           </div>
+
+          {canReport && (
+            <div className="text-center">
+              <ReportListingModal
+                listingId={listing.id}
+                sellerId={listing.seller.id}
+                currentPath={`/listings/${listing.slug}`}
+              />
+            </div>
+          )}
         </div>
       </div>
 

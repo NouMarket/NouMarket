@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { MOCK_PENDING_LISTINGS } from "@/data/listings";
@@ -40,6 +41,25 @@ export default async function AdminPendingPage() {
       ? MOCK_PENDING_LISTINGS
       : (rows as JoinedListing[]).map(mapJoinedListingToListing);
 
+  if (!listingsError && pendingListings.length > 0) {
+    const { data: reports } = await supabase
+      .from("listing_reports")
+      .select("listing_id")
+      .in("listing_id", pendingListings.map((listing) => listing.id));
+
+    const reportCounts = new Map<string, number>();
+    for (const report of reports ?? []) {
+      reportCounts.set(
+        report.listing_id,
+        (reportCounts.get(report.listing_id) ?? 0) + 1
+      );
+    }
+
+    for (const listing of pendingListings) {
+      listing.reportCount = reportCounts.get(listing.id) ?? 0;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin top bar */}
@@ -47,7 +67,13 @@ export default async function AdminPendingPage() {
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <LayoutDashboard className="h-4 w-4 text-gray-400" />
           <span className="text-sm font-medium">Administration NouMarket</span>
-          <Badge variant="warning" className="ml-auto">
+          <Link
+            href="/admin/reports"
+            className="ml-auto text-xs text-gray-300 hover:text-white"
+          >
+            Signalements
+          </Link>
+          <Badge variant="warning">
             Mode Admin
           </Badge>
         </div>

@@ -58,6 +58,11 @@ export default function PendingListingCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <Badge variant="warning">En attente</Badge>
+                {listing.reportCount ? (
+                  <Badge variant="danger">
+                    {listing.reportCount} signalement{listing.reportCount > 1 ? "s" : ""}
+                  </Badge>
+                ) : null}
                 {category && (
                   <span className="text-xs text-gray-500">
                     {category.icon} {category.labelFr}
