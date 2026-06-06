@@ -8,14 +8,15 @@ import type { ListingReportRow, ListingRow, ProfileRow } from "@/types/database"
 import Badge from "@/components/ui/Badge";
 
 export const metadata: Metadata = {
-  title: "Administration - Signalements",
+  title: "Administration – Signalements",
+  robots: { index: false, follow: false },
 };
 
 const REASON_LABELS: Record<ListingReportRow["reason"], string> = {
-  inappropriate: "Contenu inapproprie",
+  inappropriate: "Contenu inapproprié",
   spam: "Spam",
   fraud: "Fraude ou arnaque",
-  wrong_category: "Mauvaise categorie",
+  wrong_category: "Mauvaise catégorie",
   other: "Autre",
 };
 
@@ -85,7 +86,7 @@ export default async function AdminReportsPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Signalements</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Consultez les annonces signalees par les utilisateurs.
+            Consultez les annonces signalées par les utilisateurs.
           </p>
         </div>
 
@@ -95,7 +96,7 @@ export default async function AdminReportsPage() {
               Aucun signalement
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Les futurs signalements apparaitront ici.
+              Les futurs signalements apparaîtront ici.
             </p>
           </div>
         ) : (
@@ -125,7 +126,7 @@ export default async function AdminReportsPage() {
                         )}
                       </h2>
                       <p className="mt-1 text-sm text-gray-500">
-                        Signale par {reporter?.name ?? "Utilisateur inconnu"}
+                        Signalé par {reporter?.name ?? "Utilisateur inconnu"}
                       </p>
                     </div>
                     <p className="shrink-0 text-xs text-gray-400">

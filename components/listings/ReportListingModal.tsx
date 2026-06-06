@@ -8,10 +8,10 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import Button from "@/components/ui/Button";
 
 const REASONS: { value: ReportReason; label: string }[] = [
-  { value: "inappropriate", label: "Contenu inapproprie" },
+  { value: "inappropriate", label: "Contenu inapproprié" },
   { value: "spam", label: "Spam" },
   { value: "fraud", label: "Fraude ou arnaque" },
-  { value: "wrong_category", label: "Mauvaise categorie" },
+  { value: "wrong_category", label: "Mauvaise catégorie" },
   { value: "other", label: "Autre" },
 ];
 
@@ -81,7 +81,7 @@ export default function ReportListingModal({
                   Signaler cette annonce
                 </h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  Aidez-nous a garder NouMarket fiable.
+                  Aidez-nous à garder NouMarket fiable.
                 </p>
               </div>
               <button
@@ -107,9 +107,9 @@ export default function ReportListingModal({
               <div className="space-y-4 text-center">
                 <CheckCircle className="mx-auto h-10 w-10 text-green-500" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Signalement envoye</h3>
+                  <h3 className="font-semibold text-gray-900">Signalement envoyé</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Merci, notre equipe examinera cette annonce.
+                    Merci, notre équipe examinera cette annonce.
                   </p>
                 </div>
                 <Button fullWidth onClick={() => setOpen(false)}>
@@ -120,9 +120,9 @@ export default function ReportListingModal({
               <div className="space-y-4 text-center">
                 <AlertTriangle className="mx-auto h-10 w-10 text-amber-500" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Deja signalee</h3>
+                  <h3 className="font-semibold text-gray-900">Déjà signalée</h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Vous avez deja signale cette annonce.
+                    Vous avez déjà signalé cette annonce.
                   </p>
                 </div>
                 <Button fullWidth onClick={() => setOpen(false)}>
@@ -153,7 +153,7 @@ export default function ReportListingModal({
                 <textarea
                   value={details}
                   onChange={(event) => setDetails(event.target.value)}
-                  placeholder="Details complementaires (optionnel)"
+                  placeholder="Détails complémentaires (optionnel)"
                   rows={3}
                   maxLength={1000}
                   className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"

@@ -17,6 +17,7 @@ interface Props {
 
 export const metadata: Metadata = {
   title: "Conversation",
+  robots: { index: false, follow: false },
 };
 
 export default async function ConversationPage({ params }: Props) {

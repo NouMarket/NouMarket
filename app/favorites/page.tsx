@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Mes favoris",
+  robots: { index: false, follow: false },
 };
 
 export default async function FavoritesPage() {

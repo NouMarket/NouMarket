@@ -11,6 +11,7 @@ import ConversationCard from "@/components/messages/ConversationCard";
 
 export const metadata: Metadata = {
   title: "Messages",
+  robots: { index: false, follow: false },
 };
 
 function byId<T extends { id: string }>(rows: T[] | null | undefined) {
@@ -83,7 +84,7 @@ export default async function MessagesPage() {
               Aucune conversation
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Vos prochains echanges apparaitront ici.
+              Vos prochains échanges apparaîtront ici.
             </p>
           </div>
         ) : (

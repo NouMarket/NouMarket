@@ -25,11 +25,12 @@ import {
   conditionLabel,
 } from "@/lib/utils";
 import type { Listing } from "@/types";
-import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import ListingGrid from "@/components/listings/ListingGrid";
 import ContactSellerButton from "@/components/messages/ContactSellerButton";
 import ReportListingModal from "@/components/listings/ReportListingModal";
+import SellerListingActions from "@/components/listings/SellerListingActions";
+import ViewTracker from "@/components/listings/ViewTracker";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -78,9 +79,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const listing = await getListing(slug);
   if (!listing) return {};
+
+  const description = listing.description.slice(0, 160);
+  const image = listing.images[0] ?? null;
+
   return {
     title: listing.title,
-    description: listing.description.slice(0, 160),
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      url: `/listings/${slug}`,
+      type: "website",
+      ...(image && {
+        images: [{ url: image, width: 1200, height: 630, alt: listing.title }],
+      }),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: listing.title,
+      description,
+      ...(image && { images: [image] }),
+    },
   };
 }
 
@@ -113,9 +133,13 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
   const trustLabel = trustLevelLabel(listing.seller.trustLevel);
   const related = await getRelated(listing.categorySlug, slug);
   const canReport = user && user.id !== listing.seller.id;
+  const isSeller = user?.id === listing.seller.id;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* View counter — fire-and-forget, skips self-views */}
+      <ViewTracker listingId={listing.id} />
+
       {/* Status banner — shown to seller when their listing is not yet active */}
       {listing.status !== "active" && user?.id === listing.seller.id && !submitted && (
         <div
@@ -279,16 +303,11 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
               )}
             </div>
 
-            <div className="mb-2">
-              <ContactSellerButton
-                listingId={listing.id}
-                sellerId={listing.seller.id}
-                currentPath={`/listings/${listing.slug}`}
-              />
-            </div>
-            <Button fullWidth variant="outline" size="md">
-              Faire une offre
-            </Button>
+            <ContactSellerButton
+              listingId={listing.id}
+              sellerId={listing.seller.id}
+              currentPath={`/listings/${listing.slug}`}
+            />
           </div>
 
           {/* Seller card */}
@@ -320,6 +339,15 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
               Membre depuis {listing.seller.memberSince}
             </div>
           </div>
+
+          {/* Seller management actions */}
+          {isSeller && (
+            <SellerListingActions
+              listingId={listing.id}
+              slug={listing.slug}
+              status={listing.status}
+            />
+          )}
 
           {/* Safety tips */}
           <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 text-xs text-amber-800 space-y-1">

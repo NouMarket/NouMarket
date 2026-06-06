@@ -24,11 +24,15 @@ interface ImageUploaderProps {
   listingId: string;
   /** Called with the ordered array of public URLs whenever the list changes */
   onChange: (urls: string[]) => void;
+  /** Pre-populate with already-uploaded URLs (used in edit mode) */
+  initialUrls?: string[];
 }
 
-export default function ImageUploader({ userId, listingId, onChange }: ImageUploaderProps) {
+export default function ImageUploader({ userId, listingId, onChange, initialUrls }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [images, setImages] = useState<UploadedImage[]>(
+    (initialUrls ?? []).map((url) => ({ url, name: url.split("/").pop() ?? "image" }))
+  );
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const supabase = createClient();
@@ -190,8 +194,8 @@ export default function ImageUploader({ userId, listingId, onChange }: ImageUplo
                 </span>
               )}
 
-              {/* Controls overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+              {/* Controls — always visible on mobile, hover on desktop */}
+              <div className="absolute inset-0 bg-black/25 sm:bg-black/0 sm:group-hover:bg-black/30 transition-colors flex items-center justify-center gap-1 sm:opacity-0 sm:group-hover:opacity-100">
                 <button
                   type="button"
                   onClick={() => moveUp(i)}

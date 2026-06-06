@@ -8,6 +8,7 @@ import CreateListingForm from "@/components/forms/CreateListingForm";
 export const metadata: Metadata = {
   title: "Déposer une annonce",
   description: "Publiez votre annonce gratuitement sur NouMarket en quelques minutes.",
+  robots: { index: false, follow: false },
 };
 
 export default async function CreatePage() {

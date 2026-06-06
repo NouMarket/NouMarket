@@ -44,7 +44,29 @@ export default function ListingCard({
               📷
             </div>
           )}
-          {listing.isFeatured && (
+          {listing.status !== "active" && (
+            <span
+              className={cn(
+                "absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full",
+                listing.status === "sold"
+                  ? "bg-green-600 text-white"
+                  : listing.status === "pending"
+                  ? "bg-amber-400 text-amber-900"
+                  : listing.status === "rejected"
+                  ? "bg-red-500 text-white"
+                  : "bg-gray-500 text-white"
+              )}
+            >
+              {listing.status === "sold"
+                ? "Vendu"
+                : listing.status === "pending"
+                ? "En attente"
+                : listing.status === "rejected"
+                ? "Rejeté"
+                : "Archivé"}
+            </span>
+          )}
+          {listing.status === "active" && listing.isFeatured && (
             <span className="absolute top-2 left-2 bg-amber-400 text-amber-900 text-xs font-semibold px-2 py-0.5 rounded-full">
               À la une
             </span>

@@ -10,6 +10,7 @@ import Badge from "@/components/ui/Badge";
 
 export const metadata: Metadata = {
   title: "Administration – Annonces en attente",
+  robots: { index: false, follow: false },
 };
 
 export default async function AdminPendingPage() {

@@ -7,7 +7,7 @@ import { CATEGORIES } from "@/data/categories";
 import { ALL_LOCATIONS } from "@/data/locations";
 import { CONDITION_OPTIONS, FREE_IMAGE_LIMIT } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
-import { createListing, type CreateListingPayload } from "@/app/actions/listings";
+import { createListing, updateListing, type CreateListingPayload, type UpdateListingPayload } from "@/app/actions/listings";
 import { useAuth } from "@/components/providers/AuthProvider";
 import ImageUploader from "@/components/forms/ImageUploader";
 import Button from "@/components/ui/Button";
@@ -26,9 +26,27 @@ type FormState = {
   priceNegotiable: boolean;
   locationId: string;
   imageUrls: string[];
-  /** Client-generated UUID — becomes the listing id and the Storage folder prefix */
+  /** In create mode: client-generated UUID that becomes the listing id.
+   *  In edit mode: the existing listing's UUID (used as the Storage folder prefix). */
   pendingListingId: string;
 };
+
+export type EditInitialData = {
+  listingId: string;
+  categorySlug: string;
+  title: string;
+  description: string;
+  condition: string;
+  price: number;
+  priceNegotiable: boolean;
+  locationId: string;
+  imageUrls: string[];
+};
+
+interface CreateListingFormProps {
+  mode?: "create" | "edit";
+  initialData?: EditInitialData;
+}
 
 function generatePendingId(): string {
   return typeof crypto !== "undefined"
@@ -48,11 +66,27 @@ const EMPTY_FORM = (): FormState => ({
   pendingListingId: generatePendingId(),
 });
 
-export default function CreateListingForm() {
+function formFromInitialData(data: EditInitialData): FormState {
+  return {
+    categorySlug: data.categorySlug,
+    title: data.title,
+    description: data.description,
+    condition: data.condition,
+    price: data.price,
+    priceNegotiable: data.priceNegotiable,
+    locationId: data.locationId,
+    imageUrls: data.imageUrls,
+    pendingListingId: data.listingId,
+  };
+}
+
+export default function CreateListingForm({ mode = "create", initialData }: CreateListingFormProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(
+    mode === "edit" && initialData ? formFromInitialData(initialData) : EMPTY_FORM()
+  );
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -90,29 +124,46 @@ export default function CreateListingForm() {
     setSubmitting(true);
     setServerError(null);
 
-    const payload: CreateListingPayload = {
-      pendingListingId: form.pendingListingId,
-      categorySlug: form.categorySlug,
-      title: form.title,
-      description: form.description,
-      condition: form.condition,
-      price: form.price,
-      priceNegotiable: form.priceNegotiable,
-      locationId: form.locationId,
-      imageUrls: form.imageUrls,
-    };
-
     try {
-      const result = await createListing(payload);
-      // If createListing returns (instead of redirecting), it's an error
-      if ("error" in result) {
-        setServerError(result.error);
-        setSubmitting(false);
+      if (mode === "edit" && initialData) {
+        const payload: UpdateListingPayload = {
+          listingId: initialData.listingId,
+          categorySlug: form.categorySlug,
+          title: form.title,
+          description: form.description,
+          condition: form.condition,
+          price: form.price,
+          priceNegotiable: form.priceNegotiable,
+          locationId: form.locationId,
+          imageUrls: form.imageUrls,
+        };
+        const result = await updateListing(payload);
+        if ("error" in result) {
+          setServerError(result.error);
+          setSubmitting(false);
+        }
+        // On success, updateListing redirects
+      } else {
+        const payload: CreateListingPayload = {
+          pendingListingId: form.pendingListingId,
+          categorySlug: form.categorySlug,
+          title: form.title,
+          description: form.description,
+          condition: form.condition,
+          price: form.price,
+          priceNegotiable: form.priceNegotiable,
+          locationId: form.locationId,
+          imageUrls: form.imageUrls,
+        };
+        const result = await createListing(payload);
+        if ("error" in result) {
+          setServerError(result.error);
+          setSubmitting(false);
+        }
+        // On success, createListing redirects
       }
-      // On success, createListing redirects — this code won't run
     } catch {
-      // createListing calls redirect() which throws internally in Next.js —
-      // that's expected and not a real error; ignore it
+      // redirect() throws internally in Next.js — expected, not a real error
       router.refresh();
     }
   }
@@ -281,6 +332,7 @@ export default function CreateListingForm() {
               userId={user?.id ?? ""}
               listingId={form.pendingListingId}
               onChange={(urls) => set("imageUrls", urls)}
+              initialUrls={mode === "edit" ? initialData?.imageUrls : undefined}
             />
           </div>
         )}
@@ -289,8 +341,14 @@ export default function CreateListingForm() {
         {step === 5 && (
           <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Aperçu & publication</h2>
-              <p className="text-sm text-gray-500">Vérifiez votre annonce avant de la publier.</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
+                {mode === "edit" ? "Aperçu & mise à jour" : "Aperçu & publication"}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {mode === "edit"
+                  ? "Vérifiez vos modifications avant de les enregistrer."
+                  : "Vérifiez votre annonce avant de la publier."}
+              </p>
             </div>
 
             {serverError && (
@@ -332,8 +390,9 @@ export default function CreateListingForm() {
               </div>
             </div>
             <p className="text-xs text-gray-400">
-              En publiant, vous acceptez les conditions d&apos;utilisation de NouMarket. Votre annonce sera
-              examinée par notre équipe avant d&apos;être mise en ligne (moins de 24h).
+              {mode === "edit"
+                ? "La modification soumettra votre annonce à une nouvelle modération avant republication (moins de 24h)."
+                : "En publiant, vous acceptez les conditions d'utilisation de NouMarket. Votre annonce sera examinée par notre équipe avant d'être mise en ligne (moins de 24h)."}
             </p>
           </div>
         )}
@@ -357,7 +416,9 @@ export default function CreateListingForm() {
             </Button>
           ) : (
             <Button onClick={handleSubmit} loading={submitting} className="gap-1.5">
-              {submitting ? "Publication…" : "Publier l'annonce"}
+              {submitting
+                ? mode === "edit" ? "Mise à jour…" : "Publication…"
+                : mode === "edit" ? "Mettre à jour" : "Publier l'annonce"}
             </Button>
           )}
         </div>
