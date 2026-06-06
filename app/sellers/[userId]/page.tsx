@@ -10,7 +10,6 @@ import { SITE_URL } from "@/lib/constants";
 import { trustLevelLabel, trustLevelColor } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import ListingGrid from "@/components/listings/ListingGrid";
-import type { ProfileRow } from "@/types/database";
 
 interface Props {
   params: Promise<{ userId: string }>;
@@ -41,13 +40,18 @@ export default async function SellerPage({ params }: Props) {
   const { userId } = await params;
   const supabase = await createClient();
 
-  // All three queries in parallel — profiles are publicly readable
+  // All three queries in parallel — profiles are publicly readable (RLS: using(true))
+  // Select only the fields shown in the UI; never fetch is_admin or updated_at
   const [
     { data: profileData },
     { data: activeListingData },
     { count: soldCount },
   ] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", userId).single(),
+    supabase
+      .from("profiles")
+      .select("name, avatar_url, trust_level, location_name, bio, response_rate, member_since")
+      .eq("id", userId)
+      .single(),
     supabase
       .from("listings")
       .select("*, listing_images(url, order), profiles!seller_id(*)")
@@ -64,7 +68,7 @@ export default async function SellerPage({ params }: Props) {
 
   if (!profileData) notFound();
 
-  const profile = profileData as ProfileRow;
+  const profile = profileData;
   const activeListings = activeListingData
     ? (activeListingData as JoinedListing[]).map(mapJoinedListingToListing)
     : [];

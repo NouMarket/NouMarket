@@ -30,13 +30,14 @@ export function buildProductSchema(
   siteUrl: string
 ) {
   const url = `${siteUrl}/listings/${listing.slug}`;
+  const validImages = listing.images.filter(Boolean);
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name: listing.title,
     description: listing.description,
     url,
-    ...(listing.images.length > 0 ? { image: listing.images } : {}),
+    ...(validImages.length > 0 ? { image: validImages } : {}),
     ...(listing.condition
       ? { itemCondition: CONDITION_SCHEMA[listing.condition] }
       : {}),
