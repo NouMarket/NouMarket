@@ -6,6 +6,7 @@ import { getCategoryBySlug, CATEGORIES } from "@/data/categories";
 import { getListingsByCategory } from "@/data/listings";
 import { createClient } from "@/lib/supabase/server";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
+import { getCategoryCounts } from "@/lib/categories";
 import type { Listing } from "@/types";
 import ListingGrid from "@/components/listings/ListingGrid";
 import { SORT_OPTIONS } from "@/lib/constants";
@@ -54,7 +55,10 @@ export default async function CategoryPage({ params }: Props) {
   const category = getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const listings = await fetchListingsByCategory(slug);
+  const [listings, counts] = await Promise.all([
+    fetchListingsByCategory(slug),
+    getCategoryCounts(),
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -85,7 +89,9 @@ export default async function CategoryPage({ params }: Props) {
                   >
                     <span>{cat.icon}</span>
                     <span className="flex-1">{cat.labelFr}</span>
-                    <span className="text-xs text-gray-400">{cat.count}</span>
+                    <span className="text-xs text-gray-400">
+                      {counts[cat.slug] ?? cat.count ?? 0}
+                    </span>
                   </Link>
                 </li>
               ))}

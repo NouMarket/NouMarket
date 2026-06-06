@@ -17,6 +17,8 @@ import { createClient } from "@/lib/supabase/server";
 import { MOCK_LISTINGS } from "@/data/listings";
 import { getCategoryBySlug } from "@/data/categories";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
+import { buildListingJsonLd } from "@/lib/jsonld";
+import { SITE_URL } from "@/lib/constants";
 import {
   formatPrice,
   formatDate,
@@ -54,8 +56,33 @@ async function getListing(slug: string): Promise<Listing | null> {
   return mapJoinedListingToListing(data as JoinedListing);
 }
 
-/** Fetch related listings (same category) from Supabase, fall back to mock. */
-async function getRelated(categorySlug: string, excludeSlug: string): Promise<Listing[]> {
+/** Seller stats for the listing detail sidebar. */
+async function getSellerStats(
+  sellerId: string
+): Promise<{ active: number; sold: number }> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("listings")
+    .select("status")
+    .eq("seller_id", sellerId)
+    .in("status", ["active", "sold"]);
+
+  const rows = data ?? [];
+  return {
+    active: rows.filter((r) => r.status === "active").length,
+    sold: rows.filter((r) => r.status === "sold").length,
+  };
+}
+
+/**
+ * Fetch related listings — same category, same location preferred.
+ * Fetches up to 8, sorts same-location first, returns top 4.
+ */
+async function getRelated(
+  categorySlug: string,
+  excludeSlug: string,
+  locationId: string
+): Promise<Listing[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("listings")
@@ -64,15 +91,26 @@ async function getRelated(categorySlug: string, excludeSlug: string): Promise<Li
     .eq("category_slug", categorySlug)
     .neq("slug", excludeSlug)
     .order("created_at", { ascending: false })
-    .limit(4);
+    .limit(8);
 
   if (error || !data) {
-    return MOCK_LISTINGS.filter(
+    const fallback = MOCK_LISTINGS.filter(
       (l) => l.categorySlug === categorySlug && l.slug !== excludeSlug
-    ).slice(0, 4);
+    );
+    fallback.sort((a, b) =>
+      a.locationId === locationId ? -1 : b.locationId === locationId ? 1 : 0
+    );
+    return fallback.slice(0, 4);
   }
 
-  return (data as JoinedListing[]).map(mapJoinedListingToListing);
+  const rows = (data as JoinedListing[]).map(mapJoinedListingToListing);
+  // Stable sort: same-location rows bubble to front, DB date order preserved within ties
+  rows.sort((a, b) => {
+    const aLocal = a.locationId === locationId ? 0 : 1;
+    const bLocal = b.locationId === locationId ? 0 : 1;
+    return aLocal - bLocal;
+  });
+  return rows.slice(0, 4);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -131,12 +169,22 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
   const category = getCategoryBySlug(listing.categorySlug);
   const trustColor = trustLevelColor(listing.seller.trustLevel);
   const trustLabel = trustLevelLabel(listing.seller.trustLevel);
-  const related = await getRelated(listing.categorySlug, slug);
+  const [related, sellerStats] = await Promise.all([
+    getRelated(listing.categorySlug, slug, listing.locationId),
+    getSellerStats(listing.seller.id),
+  ]);
   const canReport = user && user.id !== listing.seller.id;
   const isSeller = user?.id === listing.seller.id;
+  const jsonLd = buildListingJsonLd(listing, category, SITE_URL);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* JSON-LD: Product + BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
+      />
+
       {/* View counter — fire-and-forget, skips self-views */}
       <ViewTracker listingId={listing.id} />
 
@@ -314,30 +362,54 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">À propos du vendeur</h3>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold text-sm flex-shrink-0">
-                {listing.seller.name.charAt(0).toUpperCase()}
-              </div>
+              <Link href={`/sellers/${listing.seller.id}`} className="shrink-0">
+                <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold text-sm overflow-hidden">
+                  {listing.seller.avatar ? (
+                    <Image
+                      src={listing.seller.avatar}
+                      alt={listing.seller.name}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    listing.seller.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+              </Link>
               <div>
-                <p className="text-sm font-medium text-gray-900">{listing.seller.name}</p>
-                <Badge className={trustColor}>{trustLabel}</Badge>
+                <Link
+                  href={`/sellers/${listing.seller.id}`}
+                  className="text-sm font-medium text-gray-900 hover:text-sky-600 transition-colors"
+                >
+                  {listing.seller.name}
+                </Link>
+                <div className="mt-0.5">
+                  <Badge className={trustColor}>{trustLabel}</Badge>
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm text-center">
               <div className="bg-gray-50 rounded-xl p-3">
-                <p className="font-bold text-gray-900">{listing.seller.listingCount}</p>
-                <p className="text-xs text-gray-500 mt-0.5">annonces</p>
+                <p className="font-bold text-gray-900">{sellerStats.active}</p>
+                <p className="text-xs text-gray-500 mt-0.5">actives</p>
               </div>
-              {listing.seller.responseRate && (
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="font-bold text-gray-900">{listing.seller.responseRate}%</p>
-                  <p className="text-xs text-gray-500 mt-0.5">réponses</p>
-                </div>
-              )}
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="font-bold text-gray-900">{sellerStats.sold}</p>
+                <p className="text-xs text-gray-500 mt-0.5">vendues</p>
+              </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs text-gray-500">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
               Membre depuis {listing.seller.memberSince}
             </div>
+            <Link
+              href={`/sellers/${listing.seller.id}`}
+              className="mt-3 block text-center text-xs text-sky-600 hover:text-sky-700 font-medium"
+            >
+              Voir le profil →
+            </Link>
           </div>
 
           {/* Seller management actions */}

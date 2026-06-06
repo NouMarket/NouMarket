@@ -398,6 +398,10 @@ export type Database = {
         Args: { p_listing_id: string };
         Returns: undefined;
       };
+      get_active_category_counts: {
+        Args: Record<string, never>;
+        Returns: { category_slug: string; count: number }[];
+      };
     };
     Enums: EmptyRecord;
     CompositeTypes: EmptyRecord;

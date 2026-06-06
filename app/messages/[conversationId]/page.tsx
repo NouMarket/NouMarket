@@ -15,10 +15,41 @@ interface Props {
   params: Promise<{ conversationId: string }>;
 }
 
-export const metadata: Metadata = {
-  title: "Conversation",
-  robots: { index: false, follow: false },
-};
+const PRIVATE: Metadata["robots"] = { index: false, follow: false };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { conversationId } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { title: "Conversation", robots: PRIVATE };
+
+  const { data: conv } = await supabase
+    .from("conversations")
+    .select("listing_id, buyer_id, seller_id")
+    .eq("id", conversationId)
+    .single();
+
+  if (!conv || (conv.buyer_id !== user.id && conv.seller_id !== user.id)) {
+    return { title: "Conversation", robots: PRIVATE };
+  }
+
+  const otherId = conv.buyer_id === user.id ? conv.seller_id : conv.buyer_id;
+
+  const [{ data: listing }, { data: other }] = await Promise.all([
+    supabase.from("listings").select("title").eq("id", conv.listing_id).maybeSingle(),
+    supabase.from("profiles").select("name").eq("id", otherId).maybeSingle(),
+  ]);
+
+  const title =
+    listing?.title && other?.name
+      ? `${listing.title} – ${other.name}`
+      : listing?.title ?? "Conversation";
+
+  return { title, robots: PRIVATE };
+}
 
 export default async function ConversationPage({ params }: Props) {
   const { conversationId } = await params;
