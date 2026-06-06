@@ -379,10 +379,26 @@ export type Database = {
           }
         ];
       };
+
+      rate_limit_windows: {
+        Row: { key: string; window_start: string; count: number };
+        Insert: { key: string; window_start: string; count?: number };
+        Update: { key?: string; window_start?: string; count?: number };
+        Relationships: [];
+      };
     };
 
     Views: EmptyRecord;
-    Functions: EmptyRecord;
+    Functions: {
+      rate_limit_check: {
+        Args: { p_key: string; p_window_start: string; p_max: number };
+        Returns: number;
+      };
+      increment_listing_views: {
+        Args: { p_listing_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: EmptyRecord;
     CompositeTypes: EmptyRecord;
   };

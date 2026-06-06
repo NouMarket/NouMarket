@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { ListingRow, ListingReportRow } from "@/types/database";
 
 export type ReportReason = ListingReportRow["reason"];
@@ -30,6 +31,9 @@ export async function reportListing(
 
   if (!user) return { error: "Vous devez etre connecte pour signaler une annonce." };
   if (!REPORT_REASONS.includes(reason)) return { error: "Motif de signalement invalide." };
+
+  const rl = await checkRateLimit(`reportListing:${user.id}`, 5, 3600);
+  if (!rl.ok) return { error: rl.error };
 
   const { data: listing, error: listingError } = await supabase
     .from("listings")

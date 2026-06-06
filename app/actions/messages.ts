@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { ConversationRow, ListingRow, MessageRow } from "@/types/database";
 
 type ActionResult<T> = T | { error: string };
@@ -107,6 +108,9 @@ export async function sendMessage(
   const text = body.trim();
   if (!text) return { error: "Le message est vide." };
   if (text.length > 2000) return { error: "Le message est trop long." };
+
+  const rl = await checkRateLimit(`sendMessage:${user.id}`, 20, 60);
+  if (!rl.ok) return { error: rl.error };
 
   const visible = await getVisibleConversation(conversationId, user.id);
   if ("error" in visible) return visible;

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminSupabase } from "@/lib/supabase/admin";
 import { getLocationById } from "@/data/locations";
 import { slugify } from "@/lib/utils";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -45,6 +46,9 @@ export async function createListing(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Vous devez être connecté pour publier une annonce." };
+
+  const rl = await checkRateLimit(`createListing:${user.id}`, 5, 3600);
+  if (!rl.ok) return { error: rl.error };
 
   // Resolve location name from the static data file
   const location = getLocationById(payload.locationId);
@@ -346,24 +350,21 @@ export async function markAsSold(listingId: string): Promise<MarkAsSoldResult> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function trackView(listingId: string): Promise<void> {
-  // Check whether the viewer is the seller
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Fetch only seller_id — no need to read views (atomic RPC handles increment)
   const { data: listing } = await supabase
     .from("listings")
-    .select("seller_id, views")
+    .select("seller_id")
     .eq("id", listingId)
     .single();
 
   if (!listing) return;
   if (user && user.id === listing.seller_id) return; // skip self-view
 
-  // Increment via admin client (bypasses RLS — view counting is a system operation)
-  await adminSupabase
-    .from("listings")
-    .update({ views: (listing.views ?? 0) + 1 })
-    .eq("id", listingId);
+  // Atomic increment — no read-then-write race
+  await adminSupabase.rpc("increment_listing_views", { p_listing_id: listingId });
 }

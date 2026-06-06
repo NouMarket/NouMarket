@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function addFavorite(
   listingId: string
@@ -11,6 +12,9 @@ export async function addFavorite(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Vous devez être connecté." };
+
+  const rl = await checkRateLimit(`toggleFavorite:${user.id}`, 30, 60);
+  if (!rl.ok) return { error: rl.error };
 
   const { error } = await supabase
     .from("favorites")

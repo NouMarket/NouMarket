@@ -11,6 +11,9 @@ import type { Listing } from "@/types";
 import ListingGrid from "@/components/listings/ListingGrid";
 import SearchFilterSidebar from "@/components/search/SearchFilterSidebar";
 import SearchSortBar from "@/components/search/SearchSortBar";
+import SearchPagination from "@/components/search/SearchPagination";
+
+const LISTINGS_PER_PAGE = 24;
 
 // Params accepted via URL
 interface SearchParams {
@@ -21,6 +24,7 @@ interface SearchParams {
   maxPrice?: string;
   condition?: string;
   sortBy?: string;
+  page?: string;
 }
 
 interface PageProps {
@@ -44,8 +48,10 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   };
 }
 
+type SearchResult = { listings: Listing[]; total: number };
+
 /** Client-side fallback: filter and sort mock listings when DB is not live. */
-function searchMockListings(params: SearchParams): Listing[] {
+function searchMockListings(params: SearchParams): SearchResult {
   let results = MOCK_LISTINGS.filter((l) => l.status === "active");
 
   if (params.q) {
@@ -88,18 +94,23 @@ function searchMockListings(params: SearchParams): Listing[] {
       );
   }
 
-  return results;
+  const total = results.length;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10));
+  const from = (page - 1) * LISTINGS_PER_PAGE;
+  return { listings: results.slice(from, from + LISTINGS_PER_PAGE), total };
 }
 
-/** Live Supabase FTS + filter query. */
-async function searchListings(params: SearchParams): Promise<Listing[]> {
+/** Live Supabase FTS + filter query with pagination. */
+async function searchListings(params: SearchParams): Promise<SearchResult> {
   const supabase = await createClient();
+
+  const page = Math.max(1, parseInt(params.page ?? "1", 10));
+  const from = (page - 1) * LISTINGS_PER_PAGE;
+  const to = from + LISTINGS_PER_PAGE - 1;
 
   let query = supabase
     .from("listings")
-    .select(
-      "*, listing_images(url, order), profiles!seller_id(*)"
-    )
+    .select("*, listing_images(url, order), profiles!seller_id(*)", { count: "exact" })
     .eq("status", "active");
 
   // Full-text search (French config) — only when query is ≥ 2 chars
@@ -133,7 +144,7 @@ async function searchListings(params: SearchParams): Promise<Listing[]> {
       query = query.order("created_at", { ascending: false });
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query.range(from, to);
 
   if (error) {
     // DB not live yet — fall back gracefully
@@ -142,7 +153,7 @@ async function searchListings(params: SearchParams): Promise<Listing[]> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []).map((row: any) => mapJoinedListingToListing(row));
+  return { listings: (data ?? []).map((row: any) => mapJoinedListingToListing(row)), total: count ?? 0 };
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
@@ -152,8 +163,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const q            = params.q?.trim() ?? "";
   const categorySlug = params.categorySlug ?? "";
   const location     = params.location ?? "";
+  const page         = Math.max(1, parseInt(params.page ?? "1", 10));
 
-  const listings = await searchListings(params);
+  const { listings, total } = await searchListings(params);
+  const totalPages = Math.max(1, Math.ceil(total / LISTINGS_PER_PAGE));
+
   const category = categorySlug ? getCategoryBySlug(categorySlug) : undefined;
   const locationLabel = location ? getLocationById(location)?.name : undefined;
 
@@ -193,7 +207,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
           <div className="flex-1 min-w-0 space-y-6">
             {/* Sort bar — also uses useSearchParams */}
             <Suspense fallback={<div className="h-9 bg-gray-100 rounded-xl animate-pulse" />}>
-              <SearchSortBar total={listings.length} query={q || undefined} />
+              <SearchSortBar total={total} query={q || undefined} />
             </Suspense>
 
             <ListingGrid
@@ -204,6 +218,12 @@ export default async function SearchPage({ searchParams }: PageProps) {
                   : "Aucune annonce ne correspond à ces filtres."
               }
             />
+
+            {totalPages > 1 && (
+              <Suspense fallback={<div className="h-10 bg-gray-100 rounded-xl animate-pulse" />}>
+                <SearchPagination currentPage={page} totalPages={totalPages} />
+              </Suspense>
+            )}
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://noumarket.nc";
 
@@ -100,6 +101,10 @@ export async function requestPasswordReset(
 ): Promise<string | null> {
   const email = (formData.get("email") as string | null)?.trim() ?? "";
   if (!email) return "Veuillez entrer votre adresse e-mail.";
+
+  // Key on email so the limit applies even for unauthenticated callers
+  const rl = await checkRateLimit(`passwordReset:${email.toLowerCase()}`, 3, 3600);
+  if (!rl.ok) return "Trop de tentatives. Réessayez dans une heure.";
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
