@@ -6,6 +6,8 @@ import { MapPin, Calendar, CheckCircle, XCircle, Eye } from "lucide-react";
 import { Listing } from "@/types";
 import { formatPrice, getRelativeTime } from "@/lib/utils";
 import { getCategoryBySlug } from "@/data/categories";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 
@@ -25,6 +27,7 @@ export default function PendingListingCard({
   const [rejectMode, setRejectMode] = useState(false);
   const [reason, setReason] = useState("");
   const [imgError, setImgError] = useState(false);
+  const { t } = useTranslation();
   const category = getCategoryBySlug(listing.categorySlug);
 
   function handleReject() {
@@ -36,7 +39,6 @@ export default function PendingListingCard({
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex flex-col sm:flex-row">
-        {/* Image */}
         <div className="relative w-full sm:w-40 h-36 sm:h-auto bg-gray-100 flex-shrink-0">
           {!imgError && listing.images[0] ? (
             <Image
@@ -48,36 +50,41 @@ export default function PendingListingCard({
               sizes="160px"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl">📷</div>
+            <div className="w-full h-full flex items-center justify-center text-3xl">
+              📷
+            </div>
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <Badge variant="warning">En attente</Badge>
+                <Badge variant="warning">{t("status.pending")}</Badge>
                 {listing.reportCount ? (
                   <Badge variant="danger">
-                    {listing.reportCount} signalement{listing.reportCount > 1 ? "s" : ""}
+                    {t("admin.reportCount", {
+                      count: listing.reportCount,
+                      plural: listing.reportCount > 1 ? "s" : "",
+                    })}
                   </Badge>
                 ) : null}
                 {category && (
                   <span className="text-xs text-gray-500">
-                    {category.icon} {category.labelFr}
+                    {category.icon} {t(`category.${category.slug}` as TranslationKey)}
                   </span>
                 )}
               </div>
               <h3 className="font-semibold text-gray-900 truncate">{listing.title}</h3>
-              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{listing.description}</p>
+              <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                {listing.description}
+              </p>
             </div>
             <div className="text-right shrink-0">
               <p className="font-bold text-gray-900">{formatPrice(listing.price)}</p>
             </div>
           </div>
 
-          {/* Meta */}
           <div className="flex flex-wrap gap-3 mt-3 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" /> {listing.locationName}
@@ -86,11 +93,10 @@ export default function PendingListingCard({
               <Calendar className="h-3 w-3" /> {getRelativeTime(listing.createdAt)}
             </span>
             <span className="flex items-center gap-1">
-              <Eye className="h-3 w-3" /> Vendeur : {listing.seller.name}
+              <Eye className="h-3 w-3" /> {t("admin.seller")} : {listing.seller.name}
             </span>
           </div>
 
-          {/* Actions */}
           {!rejectMode ? (
             <div className="flex items-center gap-2 mt-4">
               <Button
@@ -101,7 +107,7 @@ export default function PendingListingCard({
                 onClick={() => onApprove(listing.id)}
               >
                 <CheckCircle className="h-4 w-4" />
-                Approuver
+                {t("admin.approve")}
               </Button>
               <Button
                 variant="outline"
@@ -111,7 +117,7 @@ export default function PendingListingCard({
                 onClick={() => setRejectMode(true)}
               >
                 <XCircle className="h-4 w-4" />
-                Rejeter
+                {t("admin.reject")}
               </Button>
             </div>
           ) : (
@@ -119,7 +125,7 @@ export default function PendingListingCard({
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Raison du rejet (ex: photos manquantes, prix incorrect...)"
+                placeholder={t("admin.rejectReason")}
                 rows={2}
                 className="w-full rounded-xl border border-red-200 px-3 py-2 text-sm focus:border-red-400 focus:outline-none resize-none"
                 autoFocus
@@ -131,10 +137,17 @@ export default function PendingListingCard({
                   onClick={handleReject}
                   disabled={!reason.trim()}
                 >
-                  Confirmer le rejet
+                  {t("admin.confirmReject")}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { setRejectMode(false); setReason(""); }}>
-                  Annuler
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setRejectMode(false);
+                    setReason("");
+                  }}
+                >
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>

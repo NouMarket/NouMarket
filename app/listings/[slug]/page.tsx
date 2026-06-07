@@ -19,12 +19,14 @@ import { getCategoryBySlug } from "@/data/categories";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import { buildListingJsonLd } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/constants";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import {
   formatPrice,
   formatDate,
   trustLevelLabel,
   trustLevelColor,
-  conditionLabel,
 } from "@/lib/utils";
 import type { Listing } from "@/types";
 import Badge from "@/components/ui/Badge";
@@ -166,6 +168,9 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
     }
   }
 
+  const dictionary = await getServerDictionary();
+  const t = (key: TranslationKey, params?: Record<string, string | number>) =>
+    translate(dictionary, key, params);
   const category = getCategoryBySlug(listing.categorySlug);
   const trustColor = trustLevelColor(listing.seller.trustLevel);
   const trustLabel = trustLevelLabel(listing.seller.trustLevel);
@@ -220,9 +225,9 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
         <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-3 text-green-700">
           <CheckCircle className="h-5 w-5 flex-shrink-0" />
           <div>
-            <p className="font-semibold text-sm">Annonce soumise avec succès !</p>
+            <p className="font-semibold text-sm">{t("listing.submittedTitle")}</p>
             <p className="text-xs text-green-600 mt-0.5">
-              Notre équipe la vérifiera sous 24h avant publication.
+              {t("listing.submittedText")}
             </p>
           </div>
         </div>
@@ -230,12 +235,12 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-6 flex-wrap">
-        <Link href="/" className="hover:text-gray-700">Accueil</Link>
+        <Link href="/" className="hover:text-gray-700">{t("nav.home")}</Link>
         <ChevronRight className="h-3 w-3" />
         {category && (
           <>
             <Link href={`/categories/${category.slug}`} className="hover:text-gray-700">
-              {category.labelFr}
+              {t(`category.${category.slug}` as TranslationKey)}
             </Link>
             <ChevronRight className="h-3 w-3" />
           </>
@@ -275,7 +280,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
 
           {/* Description */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h2 className="font-semibold text-gray-900 mb-3">Description</h2>
+            <h2 className="font-semibold text-gray-900 mb-3">{t("listing.description")}</h2>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
               {listing.description}
             </p>
@@ -284,7 +289,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
           {/* Attributes */}
           {listing.attributes && Object.keys(listing.attributes).length > 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Caractéristiques</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">{t("listing.attributes")}</h2>
               <dl className="grid grid-cols-2 gap-3">
                 {Object.entries(listing.attributes).map(([key, val]) => (
                   <div key={key} className="bg-gray-50 rounded-xl px-4 py-3">
@@ -294,9 +299,9 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
                 ))}
                 {listing.condition && (
                   <div className="bg-gray-50 rounded-xl px-4 py-3">
-                    <dt className="text-xs text-gray-500">État</dt>
+                    <dt className="text-xs text-gray-500">{t("create.conditionLabel")}</dt>
                     <dd className="text-sm font-medium text-gray-900 mt-0.5">
-                      {conditionLabel(listing.condition)}
+                      {t(`condition.${listing.condition}` as TranslationKey)}
                     </dd>
                   </div>
                 )}
@@ -315,7 +320,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
                   {formatPrice(listing.price)}
                 </p>
                 {listing.priceNegotiable && (
-                  <p className="text-xs text-gray-500 mt-0.5">Prix négociable</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t("listing.priceNegotiable")}</p>
                 )}
               </div>
               <div className="flex gap-2">
@@ -340,13 +345,13 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
               {listing.views != null && (
                 <div className="flex items-center gap-2">
                   <Eye className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  {listing.views} vues
+                  {listing.views} {t("common.views")}
                 </div>
               )}
               {category && (
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  {category.icon} {category.labelFr}
+                  {category.icon} {t(`category.${category.slug}` as TranslationKey)}
                 </div>
               )}
             </div>
@@ -360,7 +365,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
 
           {/* Seller card */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">À propos du vendeur</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">{t("listing.seller")}</h3>
             <div className="flex items-center gap-3 mb-4">
               <Link href={`/sellers/${listing.seller.id}`} className="shrink-0">
                 <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold text-sm overflow-hidden">
@@ -402,7 +407,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs text-gray-500">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              Membre depuis {listing.seller.memberSince}
+              {t("common.memberSince", { date: listing.seller.memberSince })}
             </div>
             <Link
               href={`/sellers/${listing.seller.id}`}
@@ -423,10 +428,10 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
 
           {/* Safety tips */}
           <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 text-xs text-amber-800 space-y-1">
-            <p className="font-semibold mb-2">Conseils de sécurité</p>
-            <p>• Rencontrez l&apos;acheteur dans un lieu public</p>
-            <p>• Ne payez pas à l&apos;avance sans voir le bien</p>
-            <p>• Utilisez la messagerie NouMarket</p>
+            <p className="font-semibold mb-2">{t("listing.safetyTitle")}</p>
+            <p>• {t("listing.safetyMeet")}</p>
+            <p>• {t("listing.safetyAdvance")}</p>
+            <p>• {t("listing.safetyMessaging")}</p>
           </div>
 
           {canReport && (
@@ -444,7 +449,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
       {/* Related listings */}
       {related.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Annonces similaires</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">{t("listing.related")}</h2>
           <ListingGrid listings={related} compact />
         </div>
       )}

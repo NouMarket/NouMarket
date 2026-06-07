@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { Listing } from "@/types";
 import { updateListingStatus } from "@/app/actions/listings";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import PendingListingCard from "./PendingListingCard";
 import Badge from "@/components/ui/Badge";
 
@@ -17,10 +18,13 @@ interface AdminPendingQueueProps {
   initialListings: Listing[];
 }
 
-export default function AdminPendingQueue({ initialListings }: AdminPendingQueueProps) {
+export default function AdminPendingQueue({
+  initialListings,
+}: AdminPendingQueueProps) {
   const [pending, setPending] = useState<Listing[]>(initialListings);
   const [actioned, setActioned] = useState<ActionedListing[]>([]);
   const [processing, setProcessing] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   async function handleApprove(id: string) {
     setProcessing(id);
@@ -55,7 +59,6 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
 
   return (
     <>
-      {/* Stats bar */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -63,7 +66,7 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
           </div>
           <div>
             <p className="text-xl font-bold text-gray-900">{pending.length}</p>
-            <p className="text-xs text-gray-500">En attente</p>
+            <p className="text-xs text-gray-500">{t("status.pending")}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
@@ -72,7 +75,7 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
           </div>
           <div>
             <p className="text-xl font-bold text-gray-900">{approved}</p>
-            <p className="text-xs text-gray-500">Approuvées</p>
+            <p className="text-xs text-gray-500">{t("admin.approvedPlural")}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
@@ -81,12 +84,11 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
           </div>
           <div>
             <p className="text-xl font-bold text-gray-900">{rejected}</p>
-            <p className="text-xs text-gray-500">Rejetées</p>
+            <p className="text-xs text-gray-500">{t("admin.rejectedPlural")}</p>
           </div>
         </div>
       </div>
 
-      {/* Listing queue */}
       {pending.length > 0 ? (
         <div className="space-y-4">
           {pending.map((listing) => (
@@ -101,45 +103,52 @@ export default function AdminPendingQueue({ initialListings }: AdminPendingQueue
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <p className="text-4xl mb-4">🎉</p>
+          <p className="text-4xl mb-4">✓</p>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
-            File d&apos;attente vide !
+            {t("admin.pendingEmptyTitle")}
           </h2>
-          <p className="text-sm text-gray-500">
-            Toutes les annonces ont été examinées. Beau travail !
-          </p>
+          <p className="text-sm text-gray-500">{t("admin.pendingEmptyText")}</p>
         </div>
       )}
 
-      {/* Action log */}
       {actioned.length > 0 && (
         <div className="mt-8">
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Historique de cette session
+            {t("admin.sessionHistory")}
           </h2>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50">
-            {actioned.map((a) => (
-              <div key={a.id} className="flex items-center gap-3 px-5 py-3 text-sm">
-                {a.action === "approved" ? (
-                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                )}
-                <span className="text-gray-700">
-                  Annonce <span className="font-medium">#{a.id.slice(0, 8)}</span>{" "}
-                  {a.action === "approved" ? "approuvée" : "rejetée"}
-                  {a.reason && (
-                    <span className="text-gray-400"> — {a.reason}</span>
+            {actioned.map((a) => {
+              const actionLabel =
+                a.action === "approved"
+                  ? t("admin.approved").toLowerCase()
+                  : t("admin.rejected").toLowerCase();
+              return (
+                <div key={a.id} className="flex items-center gap-3 px-5 py-3 text-sm">
+                  {a.action === "approved" ? (
+                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
                   )}
-                </span>
-                <Badge
-                  className="ml-auto"
-                  variant={a.action === "approved" ? "success" : "danger"}
-                >
-                  {a.action === "approved" ? "Approuvée" : "Rejetée"}
-                </Badge>
-              </div>
-            ))}
+                  <span className="text-gray-700">
+                    {t("admin.listingActioned", {
+                      id: a.id.slice(0, 8),
+                      action: actionLabel,
+                    })}
+                    {a.reason && (
+                      <span className="text-gray-400"> - {a.reason}</span>
+                    )}
+                  </span>
+                  <Badge
+                    className="ml-auto"
+                    variant={a.action === "approved" ? "success" : "danger"}
+                  >
+                    {a.action === "approved"
+                      ? t("admin.approved")
+                      : t("admin.rejected")}
+                  </Badge>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

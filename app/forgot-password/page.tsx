@@ -1,18 +1,19 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
-import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, ChevronLeft } from "lucide-react";
 import { requestPasswordReset } from "@/app/actions/auth";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import Button from "@/components/ui/Button";
 
 function ForgotPasswordForm() {
   const searchParams = useSearchParams();
-  const sent    = searchParams.get("sent")    === "1";
+  const sent = searchParams.get("sent") === "1";
   const expired = searchParams.get("expired") === "1";
   const [error, formAction, pending] = useActionState(requestPasswordReset, null);
+  const { t } = useTranslation();
 
   if (sent) {
     return (
@@ -29,14 +30,11 @@ function ForgotPasswordForm() {
           <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center mx-auto">
             <Mail className="h-7 w-7 text-green-600" />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Vérifiez votre boîte e-mail</h1>
-          <p className="text-sm text-gray-500">
-            Si cette adresse correspond à un compte, vous recevrez un lien de réinitialisation
-            sous quelques minutes.
-          </p>
-          <p className="text-xs text-gray-400">
-            Vous ne trouvez pas l&apos;e-mail ? Vérifiez vos spams.
-          </p>
+          <h1 className="text-xl font-bold text-gray-900">
+            {t("auth.checkEmailTitle")}
+          </h1>
+          <p className="text-sm text-gray-500">{t("auth.resetEmailText")}</p>
+          <p className="text-xs text-gray-400">{t("auth.checkSpam")}</p>
         </div>
         <p className="text-center text-sm text-gray-500 mt-6">
           <Link
@@ -44,7 +42,7 @@ function ForgotPasswordForm() {
             className="inline-flex items-center gap-1 text-sky-500 hover:text-sky-600 font-medium"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
-            Retour à la connexion
+            {t("auth.backToLogin")}
           </Link>
         </p>
       </div>
@@ -53,7 +51,6 @@ function ForgotPasswordForm() {
 
   return (
     <div className="w-full max-w-sm">
-      {/* Logo */}
       <div className="text-center mb-8">
         <Link href="/" className="inline-flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center">
@@ -61,17 +58,16 @@ function ForgotPasswordForm() {
           </div>
           <span className="font-bold text-gray-900 text-xl">NouMarket</span>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-1">Mot de passe oublié</h1>
-        <p className="text-sm text-gray-500">
-          Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-1">
+          {t("auth.forgotTitle")}
+        </h1>
+        <p className="text-sm text-gray-500">{t("auth.enterEmailReset")}</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        {/* Expired link notice */}
         {expired && (
           <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl px-4 py-3 mb-4">
-            Votre lien de réinitialisation a expiré. Demandez-en un nouveau ci-dessous.
+            {t("auth.expiredReset")}
           </div>
         )}
 
@@ -84,7 +80,7 @@ function ForgotPasswordForm() {
         <form action={formAction} className="space-y-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Adresse e-mail
+              {t("auth.email")}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -101,7 +97,7 @@ function ForgotPasswordForm() {
           </div>
 
           <Button type="submit" fullWidth size="lg" loading={pending}>
-            {pending ? "Envoi…" : "Envoyer le lien"}
+            {pending ? t("auth.sending") : t("auth.sendResetLink")}
           </Button>
         </form>
       </div>
@@ -112,7 +108,7 @@ function ForgotPasswordForm() {
           className="inline-flex items-center gap-1 text-sky-500 hover:text-sky-600 font-medium"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Retour à la connexion
+          {t("auth.backToLogin")}
         </Link>
       </p>
     </div>

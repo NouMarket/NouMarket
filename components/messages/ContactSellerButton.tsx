@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { findOrCreateConversation } from "@/app/actions/messages";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import Button from "@/components/ui/Button";
 
 interface ContactSellerButtonProps {
@@ -20,6 +21,7 @@ export default function ContactSellerButton({
 }: ContactSellerButtonProps) {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +57,7 @@ export default function ContactSellerButton({
         onClick={handleClick}
       >
         <MessageCircle className="h-4 w-4" />
-        Contacter le vendeur
+        {t("listing.contactSeller")}
       </Button>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

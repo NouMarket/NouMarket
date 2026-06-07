@@ -2,16 +2,21 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface SearchPaginationProps {
   currentPage: number;
   totalPages: number;
 }
 
-export default function SearchPagination({ currentPage, totalPages }: SearchPaginationProps) {
+export default function SearchPagination({
+  currentPage,
+  totalPages,
+}: SearchPaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   function navigate(page: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -23,7 +28,6 @@ export default function SearchPagination({ currentPage, totalPages }: SearchPagi
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  // Show at most 5 page numbers centered around currentPage
   const delta = 2;
   const start = Math.max(1, currentPage - delta);
   const end = Math.min(totalPages, currentPage + delta);
@@ -37,7 +41,7 @@ export default function SearchPagination({ currentPage, totalPages }: SearchPagi
       <button
         onClick={() => navigate(currentPage - 1)}
         disabled={currentPage <= 1}
-        aria-label="Page précédente"
+        aria-label={t("common.previousPage")}
         className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -52,7 +56,7 @@ export default function SearchPagination({ currentPage, totalPages }: SearchPagi
             1
           </button>
           {start > 2 && (
-            <span className="px-1 text-gray-400 text-sm select-none">…</span>
+            <span className="px-1 text-gray-400 text-sm select-none">...</span>
           )}
         </>
       )}
@@ -75,7 +79,7 @@ export default function SearchPagination({ currentPage, totalPages }: SearchPagi
       {end < totalPages && (
         <>
           {end < totalPages - 1 && (
-            <span className="px-1 text-gray-400 text-sm select-none">…</span>
+            <span className="px-1 text-gray-400 text-sm select-none">...</span>
           )}
           <button
             onClick={() => navigate(totalPages)}
@@ -89,7 +93,7 @@ export default function SearchPagination({ currentPage, totalPages }: SearchPagi
       <button
         onClick={() => navigate(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        aria-label="Page suivante"
+        aria-label={t("common.nextPage")}
         className="p-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         <ChevronRight className="h-4 w-4" />

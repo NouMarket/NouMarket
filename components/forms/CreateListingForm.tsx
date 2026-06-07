@@ -7,6 +7,8 @@ import { CATEGORIES } from "@/data/categories";
 import { ALL_LOCATIONS } from "@/data/locations";
 import { CONDITION_OPTIONS, FREE_IMAGE_LIMIT } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { createListing, updateListing, type CreateListingPayload, type UpdateListingPayload } from "@/app/actions/listings";
 import { useAuth } from "@/components/providers/AuthProvider";
 import ImageUploader from "@/components/forms/ImageUploader";
@@ -15,7 +17,6 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 
 const TOTAL_STEPS = 5;
-const STEP_LABELS = ["Catégorie", "Détails", "Prix & lieu", "Photos", "Aperçu"];
 
 type FormState = {
   categorySlug: string;
@@ -83,6 +84,7 @@ function formFromInitialData(data: EditInitialData): FormState {
 export default function CreateListingForm({ mode = "create", initialData }: CreateListingFormProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(
     mode === "edit" && initialData ? formFromInitialData(initialData) : EMPTY_FORM()
@@ -170,13 +172,24 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
 
   const selectedCategory = CATEGORIES.find((c) => c.slug === form.categorySlug);
   const selectedLocation = ALL_LOCATIONS.find((l) => l.id === form.locationId);
+  const stepLabels = [
+    t("create.category"),
+    t("create.details"),
+    t("create.priceLocation"),
+    t("create.photos"),
+    t("create.preview"),
+  ];
+  const conditionOptions = CONDITION_OPTIONS.map((option) => ({
+    value: option.value,
+    label: t(`condition.${option.value}` as TranslationKey),
+  }));
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-0">
       {/* Step indicator */}
       <div className="mb-8">
         <div className="flex items-center gap-2">
-          {STEP_LABELS.map((label, i) => {
+          {stepLabels.map((label, i) => {
             const n = i + 1;
             const done = n < step;
             const active = n === step;
@@ -193,7 +206,7 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
                     {label}
                   </span>
                 </div>
-                {i < STEP_LABELS.length - 1 && (
+                {i < stepLabels.length - 1 && (
                   <div className={`flex-1 h-0.5 rounded ${done ? "bg-green-400" : "bg-gray-200"}`} />
                 )}
               </div>
@@ -207,9 +220,9 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
         {/* Step 1: Category */}
         {step === 1 && (
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Choisissez une catégorie</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{t("create.chooseCategory")}</h2>
             <p className="text-sm text-gray-500 mb-6">
-              Sélectionnez la catégorie la plus adaptée à votre annonce.
+              {t("create.chooseCategoryHelp")}
             </p>
             {errors.categorySlug && (
               <p className="text-sm text-red-500 mb-3">{errors.categorySlug}</p>
@@ -227,7 +240,9 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
                     }`}
                 >
                   <span className="text-2xl">{cat.icon}</span>
-                  <span className="text-sm font-medium text-gray-800">{cat.labelFr}</span>
+                  <span className="text-sm font-medium text-gray-800">
+                    {t(`category.${cat.slug}` as TranslationKey)}
+                  </span>
                 </button>
               ))}
             </div>
@@ -238,22 +253,22 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
         {step === 2 && (
           <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Détails de l&apos;annonce</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">{t("create.listingDetails")}</h2>
               <p className="text-sm text-gray-500">
-                Décrivez votre bien avec précision pour attirer les bons acheteurs.
+                {t("create.listingDetailsHelp")}
               </p>
             </div>
             <Input
-              label="Titre de l'annonce"
+              label={t("create.titleLabel")}
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
               placeholder="Ex : iPhone 15 Pro Max 256 Go – Comme neuf"
               error={errors.title}
-              hint={`${form.title.length}/80 caractères`}
+              hint={`${form.title.length}/80`}
               maxLength={80}
             />
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">Description</label>
+              <label className="text-sm font-medium text-gray-700">{t("create.descriptionLabel")}</label>
               <textarea
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
@@ -267,11 +282,11 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
             </div>
             {selectedCategory?.slug !== "emploi" && selectedCategory?.slug !== "services" && (
               <Select
-                label="État"
-                options={CONDITION_OPTIONS}
+                label={t("create.conditionLabel")}
+                options={conditionOptions}
                 value={form.condition}
                 onChange={(e) => set("condition", e.target.value)}
-                placeholder="Sélectionner l'état"
+                placeholder={t("create.conditionLabel")}
               />
             )}
           </div>
@@ -281,19 +296,19 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Prix et localisation</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">{t("create.priceLocation")}</h2>
               <p className="text-sm text-gray-500">
-                Indiquez votre prix en francs CFP (XPF) et la localisation de votre bien.
+                {t("create.subtitle")}
               </p>
             </div>
             <Input
-              label="Prix (XPF)"
+              label={t("create.priceLabel")}
               type="number"
               min={0}
               value={form.price || ""}
               onChange={(e) => set("price", Number(e.target.value))}
               placeholder="0"
-              hint={form.price > 0 ? formatPrice(form.price) : "Laissez 0 pour afficher « À discuter »"}
+              hint={form.price > 0 ? formatPrice(form.price) : t("common.free")}
               error={errors.price}
             />
             <label className="flex items-center gap-2 cursor-pointer">
@@ -303,17 +318,17 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
                 onChange={(e) => set("priceNegotiable", e.target.checked)}
                 className="rounded accent-sky-500 w-4 h-4"
               />
-              <span className="text-sm text-gray-700">Prix négociable</span>
+              <span className="text-sm text-gray-700">{t("create.negotiable")}</span>
             </label>
             <Select
-              label="Localité"
+              label={t("create.locationLabel")}
               options={ALL_LOCATIONS.map((l) => ({
                 value: l.id,
                 label: l.isNeighborhood ? `${l.name} (${l.commune})` : l.name,
               }))}
               value={form.locationId}
               onChange={(e) => set("locationId", e.target.value)}
-              placeholder="Sélectionnez une localité"
+              placeholder={t("create.locationLabel")}
               error={errors.locationId}
             />
           </div>
@@ -323,9 +338,9 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Photos</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">{t("create.photos")}</h2>
               <p className="text-sm text-gray-500">
-                Ajoutez jusqu&apos;à {FREE_IMAGE_LIMIT} photos. La première sera l&apos;image principale.
+                {t("create.photosHelp", { count: FREE_IMAGE_LIMIT })}
               </p>
             </div>
             <ImageUploader
@@ -342,12 +357,10 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
           <div className="space-y-5">
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {mode === "edit" ? "Aperçu & mise à jour" : "Aperçu & publication"}
+                {t("create.previewTitle")}
               </h2>
               <p className="text-sm text-gray-500">
-                {mode === "edit"
-                  ? "Vérifiez vos modifications avant de les enregistrer."
-                  : "Vérifiez votre annonce avant de la publier."}
+                {t("create.previewHelp")}
               </p>
             </div>
 
@@ -360,7 +373,9 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
             <div className="bg-gray-50 rounded-2xl p-5 space-y-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{selectedCategory?.icon}</span>
-                <span className="text-xs text-gray-500 font-medium">{selectedCategory?.labelFr}</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  {selectedCategory ? t(`category.${selectedCategory.slug}` as TranslationKey) : ""}
+                </span>
               </div>
               <div>
                 <p className="font-semibold text-gray-900 text-base">{form.title || "—"}</p>
@@ -381,9 +396,9 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
               )}
               <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                 <span className="font-bold text-gray-900 text-lg">
-                  {form.price > 0 ? formatPrice(form.price) : "À discuter"}
+                  {form.price > 0 ? formatPrice(form.price) : t("common.free")}
                   {form.priceNegotiable && (
-                    <span className="ml-1 text-xs font-normal text-gray-400">(négociable)</span>
+                    <span className="ml-1 text-xs font-normal text-gray-400">({t("common.negotiable")})</span>
                   )}
                 </span>
                 <span className="text-gray-500">{selectedLocation?.name ?? "—"}</span>
@@ -391,8 +406,8 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
             </div>
             <p className="text-xs text-gray-400">
               {mode === "edit"
-                ? "La modification soumettra votre annonce à une nouvelle modération avant republication (moins de 24h)."
-                : "En publiant, vous acceptez les conditions d'utilisation de NouMarket. Votre annonce sera examinée par notre équipe avant d'être mise en ligne (moins de 24h)."}
+                ? t("create.terms")
+                : t("create.terms")}
             </p>
           </div>
         )}
@@ -406,19 +421,19 @@ export default function CreateListingForm({ mode = "create", initialData }: Crea
             className="gap-1.5"
           >
             <ChevronLeft className="h-4 w-4" />
-            Retour
+            {t("common.previous")}
           </Button>
 
           {step < TOTAL_STEPS ? (
             <Button onClick={next} className="gap-1.5">
-              Suivant
+              {t("common.next")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button onClick={handleSubmit} loading={submitting} className="gap-1.5">
               {submitting
-                ? mode === "edit" ? "Mise à jour…" : "Publication…"
-                : mode === "edit" ? "Mettre à jour" : "Publier l'annonce"}
+                ? t("create.publishing")
+                : mode === "edit" ? t("common.save") : t("create.publish")}
             </Button>
           )}
         </div>

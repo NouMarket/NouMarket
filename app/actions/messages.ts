@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
 import type { ConversationRow, ListingRow, MessageRow } from "@/types/database";
 
@@ -27,9 +28,9 @@ async function getVisibleConversation(
     .eq("id", conversationId)
     .single();
 
-  if (error || !data) return { error: "Conversation introuvable." };
+  if (error || !data) return { error: await actionError("errors.conversationNotFound") };
   if (data.buyer_id !== userId && data.seller_id !== userId) {
-    return { error: "Acces refuse." };
+    return { error: await actionError("errors.accessDenied") };
   }
 
   return { conversation: data };
@@ -39,7 +40,7 @@ export async function findOrCreateConversation(
   listingId: string
 ): Promise<ActionResult<{ conversationId: string }>> {
   const { supabase, user } = await getCurrentUser();
-  if (!user) return { error: "Vous devez etre connecte pour envoyer un message." };
+  if (!user) return { error: await actionError("errors.authMessageRequired") };
 
   const { data: listing, error: listingError } = await supabase
     .from("listings")
@@ -47,9 +48,11 @@ export async function findOrCreateConversation(
     .eq("id", listingId)
     .single();
 
-  if (listingError || !listing) return { error: "Annonce introuvable." };
+  if (listingError || !listing) {
+    return { error: await actionError("errors.listingNotFound") };
+  }
   if ((listing as Pick<ListingRow, "seller_id">).seller_id === user.id) {
-    return { error: "Vous ne pouvez pas vous envoyer un message." };
+    return { error: await actionError("errors.selfMessage") };
   }
 
   const sellerId = (listing as Pick<ListingRow, "seller_id">).seller_id;
@@ -95,7 +98,7 @@ export async function findOrCreateConversation(
     }
   }
 
-  return { error: "Impossible de creer la conversation. Reessayez." };
+  return { error: await actionError("errors.createConversation") };
 }
 
 export async function sendMessage(
@@ -103,11 +106,11 @@ export async function sendMessage(
   body: string
 ): Promise<ActionResult<{ message: MessageRow }>> {
   const { supabase, user } = await getCurrentUser();
-  if (!user) return { error: "Vous devez etre connecte pour envoyer un message." };
+  if (!user) return { error: await actionError("errors.authMessageRequired") };
 
   const text = body.trim();
-  if (!text) return { error: "Le message est vide." };
-  if (text.length > 2000) return { error: "Le message est trop long." };
+  if (!text) return { error: await actionError("errors.messageEmpty") };
+  if (text.length > 2000) return { error: await actionError("errors.messageTooLong") };
 
   const rl = await checkRateLimit(`sendMessage:${user.id}`, 20, 60);
   if (!rl.ok) return { error: rl.error };
@@ -125,7 +128,7 @@ export async function sendMessage(
     .select("*")
     .single();
 
-  if (error || !message) return { error: "Message non envoye. Reessayez." };
+  if (error || !message) return { error: await actionError("errors.messageSend") };
 
   revalidatePath("/messages");
   revalidatePath(`/messages/${conversationId}`);
@@ -136,7 +139,7 @@ export async function markMessagesRead(
   conversationId: string
 ): Promise<ActionResult<{ success: true }>> {
   const { supabase, user } = await getCurrentUser();
-  if (!user) return { error: "Vous devez etre connecte." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const visible = await getVisibleConversation(conversationId, user.id);
   if ("error" in visible) return visible;
@@ -148,7 +151,7 @@ export async function markMessagesRead(
     .neq("sender_id", user.id)
     .is("read_at", null);
 
-  if (error) return { error: "Lecture des messages impossible." };
+  if (error) return { error: await actionError("errors.markRead") };
 
   revalidatePath("/messages");
   return { success: true };
@@ -158,7 +161,7 @@ export async function deleteConversation(
   conversationId: string
 ): Promise<ActionResult<{ success: true }>> {
   const { supabase, user } = await getCurrentUser();
-  if (!user) return { error: "Vous devez etre connecte." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const visible = await getVisibleConversation(conversationId, user.id);
   if ("error" in visible) return visible;
@@ -173,7 +176,7 @@ export async function deleteConversation(
     .update(update)
     .eq("id", conversationId);
 
-  if (error) return { error: "Suppression impossible. Reessayez." };
+  if (error) return { error: await actionError("errors.deleteRetry") };
 
   revalidatePath("/messages");
   return { success: true };

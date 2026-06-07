@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getLocationById } from "@/data/locations";
+import { actionError } from "@/lib/i18n/action-errors";
 import type { Database } from "@/types/database";
 
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
@@ -23,15 +24,15 @@ export async function updateProfile(
   const name = payload.name.trim();
   const bio = payload.bio.trim();
 
-  if (!name) return { error: "Le nom est requis." };
-  if (name.length > 100) return { error: "Le nom ne peut pas dépasser 100 caractères." };
-  if (bio.length > 500) return { error: "La bio ne peut pas dépasser 500 caractères." };
+  if (!name) return { error: await actionError("errors.nameRequired") };
+  if (name.length > 100) return { error: await actionError("errors.nameTooLong") };
+  if (bio.length > 500) return { error: await actionError("errors.bioTooLong") };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const location = payload.locationId ? getLocationById(payload.locationId) : undefined;
   const locationName = location
@@ -60,7 +61,7 @@ export async function updateProfile(
 
   if (error) {
     console.error("[updateProfile]", error.message);
-    return { error: "Mise à jour impossible. Réessayez." };
+    return { error: await actionError("errors.updateRetry") };
   }
 
   revalidatePath("/profile");

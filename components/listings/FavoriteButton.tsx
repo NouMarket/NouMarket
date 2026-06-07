@@ -6,6 +6,7 @@ import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addFavorite, removeFavorite } from "@/app/actions/favorites";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface FavoriteButtonProps {
   listingId: string;
@@ -22,6 +23,7 @@ export default function FavoriteButton({
 }: FavoriteButtonProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [favorited, setFavorited] = useState(initialFavorited);
   const [busy, setBusy] = useState(false);
 
@@ -51,7 +53,7 @@ export default function FavoriteButton({
   return (
     <button
       onClick={handleToggle}
-      aria-label={favorited ? "Retirer des favoris" : "Ajouter aux favoris"}
+      aria-label={favorited ? t("listing.favoriteRemove") : t("listing.favoriteAdd")}
       className={cn(
         "p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:scale-110 transition-transform",
         className

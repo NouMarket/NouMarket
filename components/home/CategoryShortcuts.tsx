@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/data/categories";
 import { getCategoryCounts } from "@/lib/categories";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
 
 export default async function CategoryShortcuts() {
-  const counts = await getCategoryCounts();
+  const [counts, dictionary] = await Promise.all([
+    getCategoryCounts(),
+    getServerDictionary(),
+  ]);
+  const t = (key: TranslationKey, params?: Record<string, string | number>) =>
+    translate(dictionary, key, params);
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Parcourir par catégorie</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
+        {t("home.browseCategories")}
+      </h2>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3">
         {CATEGORIES.map((cat) => {
           const liveCount = counts[cat.slug] ?? cat.count;
@@ -20,7 +30,9 @@ export default async function CategoryShortcuts() {
               <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
                 {cat.icon}
               </span>
-              <span className="text-xs font-medium text-gray-700 leading-tight">{cat.labelFr}</span>
+              <span className="text-xs font-medium text-gray-700 leading-tight">
+                {t(`category.${cat.slug}` as TranslationKey)}
+              </span>
               {liveCount != null && liveCount > 0 && (
                 <span className="text-xs text-gray-400">{liveCount}</span>
               )}

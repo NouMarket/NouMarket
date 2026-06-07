@@ -5,6 +5,8 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { CATEGORIES } from "@/data/categories";
 import { LOCATIONS, NOUMEA_NEIGHBORHOODS } from "@/data/locations";
 import { CONDITION_OPTIONS } from "@/lib/constants";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { formatPrice } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 
@@ -12,13 +14,13 @@ export default function SearchFilterSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
-  // Read current filter values from URL
   const currentCategory = searchParams.get("categorySlug") ?? "";
-  const currentLocation  = searchParams.get("location") ?? "";
+  const currentLocation = searchParams.get("location") ?? "";
   const currentCondition = searchParams.get("condition") ?? "";
-  const currentMinPrice  = searchParams.get("minPrice") ?? "";
-  const currentMaxPrice  = searchParams.get("maxPrice") ?? "";
+  const currentMinPrice = searchParams.get("minPrice") ?? "";
+  const currentMaxPrice = searchParams.get("maxPrice") ?? "";
 
   const activeFilters = [
     currentCategory,
@@ -28,7 +30,6 @@ export default function SearchFilterSidebar() {
     currentMaxPrice,
   ].filter(Boolean).length;
 
-  /** Update a single param, preserve all others, scroll to top. */
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
@@ -36,7 +37,6 @@ export default function SearchFilterSidebar() {
     } else {
       params.delete(key);
     }
-    // Reset to page 1 whenever a filter changes
     params.delete("page");
     router.replace(`${pathname}?${params.toString()}`);
   }
@@ -50,11 +50,10 @@ export default function SearchFilterSidebar() {
 
   return (
     <aside className="w-full lg:w-60 shrink-0 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
           <SlidersHorizontal className="h-4 w-4" />
-          Filtres
+          {t("common.filters")}
           {activeFilters > 0 && (
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-500 text-white text-xs font-bold">
               {activeFilters}
@@ -66,15 +65,14 @@ export default function SearchFilterSidebar() {
             onClick={clearAll}
             className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <X className="h-3 w-3" /> Effacer
+            <X className="h-3 w-3" /> {t("common.clear")}
           </button>
         )}
       </div>
 
-      {/* Category */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-          Catégorie
+          {t("create.category")}
         </p>
         <ul className="space-y-0.5">
           <li>
@@ -86,7 +84,7 @@ export default function SearchFilterSidebar() {
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >
-              Toutes les catégories
+              {t("common.allCategories")}
             </button>
           </li>
           {CATEGORIES.map((cat) => (
@@ -100,32 +98,33 @@ export default function SearchFilterSidebar() {
                 }`}
               >
                 <span>{cat.icon}</span>
-                <span className="flex-1">{cat.labelFr}</span>
+                <span className="flex-1">
+                  {t(`category.${cat.slug}` as TranslationKey)}
+                </span>
               </button>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* Location */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-          Localité
+          {t("create.locationLabel")}
         </p>
         <select
           value={currentLocation}
           onChange={(e) => setParam("location", e.target.value)}
           className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-sky-500 focus:outline-none bg-white"
         >
-          <option value="">Toute la NC</option>
-          <optgroup label="Communes">
+          <option value="">{t("location.allNc")}</option>
+          <optgroup label={t("location.communes")}>
             {LOCATIONS.map((loc) => (
               <option key={loc.id} value={loc.id}>
                 {loc.name}
               </option>
             ))}
           </optgroup>
-          <optgroup label="Quartiers de Nouméa">
+          <optgroup label={t("location.noumeaNeighborhoods")}>
             {NOUMEA_NEIGHBORHOODS.map((loc) => (
               <option key={loc.id} value={loc.id}>
                 {loc.name}
@@ -135,16 +134,15 @@ export default function SearchFilterSidebar() {
         </select>
       </div>
 
-      {/* Price range */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-          Prix (XPF)
+          {t("common.price")} (XPF)
         </p>
         <div className="flex gap-2">
           <input
             type="number"
             min={0}
-            placeholder="Min"
+            placeholder={t("common.min")}
             value={currentMinPrice}
             onChange={(e) => setParam("minPrice", e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
@@ -152,7 +150,7 @@ export default function SearchFilterSidebar() {
           <input
             type="number"
             min={0}
-            placeholder="Max"
+            placeholder={t("common.max")}
             value={currentMaxPrice}
             onChange={(e) => setParam("maxPrice", e.target.value)}
             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
@@ -166,10 +164,9 @@ export default function SearchFilterSidebar() {
         )}
       </div>
 
-      {/* Condition */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-          État
+          {t("create.conditionLabel")}
         </p>
         <ul className="space-y-0.5">
           <li>
@@ -181,7 +178,7 @@ export default function SearchFilterSidebar() {
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >
-              Tous les états
+              {t("common.allConditions")}
             </button>
           </li>
           {CONDITION_OPTIONS.map((opt) => (
@@ -194,17 +191,20 @@ export default function SearchFilterSidebar() {
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                {opt.label}
+                {t(`condition.${opt.value}` as TranslationKey)}
               </button>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* Apply button (mobile convenience) */}
       <div className="lg:hidden">
-        <Button fullWidth variant="secondary" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-          Voir les résultats
+        <Button
+          fullWidth
+          variant="secondary"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          {t("common.viewResults")}
         </Button>
       </div>
     </aside>

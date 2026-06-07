@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { markMessagesRead } from "@/app/actions/messages";
 import type { MessageRow } from "@/types/database";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 
@@ -21,6 +22,7 @@ export default function MessageList({
   const supabase = useMemo(() => createClient(), []);
   const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
   const endRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -72,7 +74,7 @@ export default function MessageList({
       <div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-64 items-center justify-center text-center text-sm text-gray-400">
-            Aucun message pour le moment.
+            {t("messages.noMessages")}
           </div>
         ) : (
           messages.map((message) => (

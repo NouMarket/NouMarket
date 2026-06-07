@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SORT_OPTIONS } from "@/lib/constants";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface SearchSortBarProps {
   total: number;
@@ -12,6 +14,7 @@ export default function SearchSortBar({ total, query }: SearchSortBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   function handleSort(value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -31,15 +34,19 @@ export default function SearchSortBar({ total, query }: SearchSortBarProps) {
         {total > 0 ? (
           <>
             <span className="font-semibold text-gray-900">{total}</span>{" "}
-            résultat{total !== 1 ? "s" : ""}
+            {t("common.results", { plural: total !== 1 ? "s" : "" })}
             {query && (
               <>
-                {" "}pour <span className="font-medium text-gray-700">&ldquo;{query}&rdquo;</span>
+                {" "}
+                {t("common.forQuery")}{" "}
+                <span className="font-medium text-gray-700">
+                  &ldquo;{query}&rdquo;
+                </span>
               </>
             )}
           </>
         ) : (
-          "Aucun résultat"
+          t("common.noResults")
         )}
       </p>
 
@@ -47,11 +54,11 @@ export default function SearchSortBar({ total, query }: SearchSortBarProps) {
         value={currentSort}
         onChange={(e) => handleSort(e.target.value)}
         className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-sky-500 focus:outline-none bg-white"
-        aria-label="Trier les résultats"
+        aria-label={t("search.sortResults")}
       >
         {SORT_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {opt.label}
+            {t(`sort.${opt.value}` as TranslationKey)}
           </option>
         ))}
       </select>

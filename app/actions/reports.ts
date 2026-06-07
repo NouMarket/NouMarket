@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
 import type { ListingRow, ListingReportRow } from "@/types/database";
 
@@ -29,8 +30,8 @@ export async function reportListing(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Vous devez etre connecte pour signaler une annonce." };
-  if (!REPORT_REASONS.includes(reason)) return { error: "Motif de signalement invalide." };
+  if (!user) return { error: await actionError("errors.reportAuth") };
+  if (!REPORT_REASONS.includes(reason)) return { error: await actionError("errors.reportInvalid") };
 
   const rl = await checkRateLimit(`reportListing:${user.id}`, 5, 3600);
   if (!rl.ok) return { error: rl.error };
@@ -41,11 +42,11 @@ export async function reportListing(
     .eq("id", listingId)
     .single();
 
-  if (listingError || !listing) return { error: "Annonce introuvable." };
+  if (listingError || !listing) return { error: await actionError("errors.listingNotFound") };
 
   const sellerId = (listing as Pick<ListingRow, "seller_id">).seller_id;
   if (sellerId === user.id) {
-    return { error: "Vous ne pouvez pas signaler votre propre annonce." };
+    return { error: await actionError("errors.reportOwn") };
   }
 
   const { error } = await supabase.from("listing_reports").insert({
@@ -58,5 +59,5 @@ export async function reportListing(
   if (!error) return { success: true };
   if (error.code === "23505") return { alreadyReported: true };
 
-  return { error: "Signalement impossible. Reessayez." };
+  return { error: await actionError("errors.reportRetry") };
 }

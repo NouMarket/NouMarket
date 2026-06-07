@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function addFavorite(
@@ -11,7 +12,7 @@ export async function addFavorite(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const rl = await checkRateLimit(`toggleFavorite:${user.id}`, 30, 60);
   if (!rl.ok) return { error: rl.error };
@@ -23,7 +24,7 @@ export async function addFavorite(
   // 23505 = unique violation → already favorited, treat as success
   if (error && error.code !== "23505") {
     console.error("[addFavorite]", error.message);
-    return { error: "Impossible d'ajouter aux favoris." };
+    return { error: await actionError("errors.addFavorite") };
   }
 
   revalidatePath("/favorites");
@@ -37,7 +38,7 @@ export async function removeFavorite(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const { error } = await supabase
     .from("favorites")
@@ -47,7 +48,7 @@ export async function removeFavorite(
 
   if (error) {
     console.error("[removeFavorite]", error.message);
-    return { error: "Impossible de supprimer des favoris." };
+    return { error: await actionError("errors.removeFavorite") };
   }
 
   revalidatePath("/favorites");

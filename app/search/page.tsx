@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { MOCK_LISTINGS } from "@/data/listings";
 import { getCategoryBySlug } from "@/data/categories";
 import { getLocationById } from "@/data/locations";
+import { getServerDictionary } from "@/lib/i18n/server";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { translate } from "@/lib/i18n/translate";
 import { mapJoinedListingToListing } from "@/lib/mappers";
 import type { Listing } from "@/types";
 import ListingGrid from "@/components/listings/ListingGrid";
@@ -15,7 +18,6 @@ import SearchPagination from "@/components/search/SearchPagination";
 
 const LISTINGS_PER_PAGE = 24;
 
-// Params accepted via URL
 interface SearchParams {
   q?: string;
   categorySlug?: string;
@@ -31,26 +33,31 @@ interface PageProps {
   searchParams: Promise<SearchParams>;
 }
 
-export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
   const params = await searchParams;
   const q = params.q?.trim();
-  const cat = params.categorySlug ? getCategoryBySlug(params.categorySlug) : undefined;
+  const cat = params.categorySlug
+    ? getCategoryBySlug(params.categorySlug)
+    : undefined;
 
   const title = q
-    ? `"${q}" – Recherche NouMarket`
+    ? `"${q}" - Recherche NouMarket`
     : cat
-    ? `${cat.labelFr} – NouMarket`
-    : "Recherche – NouMarket";
+      ? `${cat.labelFr} - NouMarket`
+      : "Recherche - NouMarket";
 
   return {
     title,
-    description: `Trouvez des annonces${q ? ` pour "${q}"` : ""}${cat ? ` en ${cat.labelFr.toLowerCase()}` : ""} en Nouvelle-Calédonie sur NouMarket.`,
+    description: `Trouvez des annonces${q ? ` pour "${q}"` : ""}${
+      cat ? ` en ${cat.labelFr.toLowerCase()}` : ""
+    } en Nouvelle-Calédonie sur NouMarket.`,
   };
 }
 
 type SearchResult = { listings: Listing[]; total: number };
 
-/** Client-side fallback: filter and sort mock listings when DB is not live. */
 function searchMockListings(params: SearchParams): SearchResult {
   let results = MOCK_LISTINGS.filter((l) => l.status === "active");
 
@@ -100,7 +107,6 @@ function searchMockListings(params: SearchParams): SearchResult {
   return { listings: results.slice(from, from + LISTINGS_PER_PAGE), total };
 }
 
-/** Live Supabase FTS + filter query with pagination. */
 async function searchListings(params: SearchParams): Promise<SearchResult> {
   const supabase = await createClient();
 
@@ -110,10 +116,11 @@ async function searchListings(params: SearchParams): Promise<SearchResult> {
 
   let query = supabase
     .from("listings")
-    .select("*, listing_images(url, order), profiles!seller_id(*)", { count: "exact" })
+    .select("*, listing_images(url, order), profiles!seller_id(*)", {
+      count: "exact",
+    })
     .eq("status", "active");
 
-  // Full-text search (French config) — only when query is ≥ 2 chars
   if (params.q && params.q.trim().length >= 2) {
     query = query.textSearch("fts", params.q.trim(), {
       type: "websearch",
@@ -122,16 +129,19 @@ async function searchListings(params: SearchParams): Promise<SearchResult> {
   }
 
   if (params.categorySlug) query = query.eq("category_slug", params.categorySlug);
-  if (params.location)     query = query.eq("location_id", params.location);
-  if (params.minPrice && !isNaN(Number(params.minPrice)))
+  if (params.location) query = query.eq("location_id", params.location);
+  if (params.minPrice && !isNaN(Number(params.minPrice))) {
     query = query.gte("price", Number(params.minPrice));
-  if (params.maxPrice && !isNaN(Number(params.maxPrice)))
+  }
+  if (params.maxPrice && !isNaN(Number(params.maxPrice))) {
     query = query.lte("price", Number(params.maxPrice));
-  if (params.condition)
+  }
+  if (params.condition) {
     query = query.eq(
       "condition",
       params.condition as "new" | "like_new" | "good" | "fair" | "poor"
     );
+  }
 
   switch (params.sortBy) {
     case "price_asc":
@@ -147,55 +157,62 @@ async function searchListings(params: SearchParams): Promise<SearchResult> {
   const { data, error, count } = await query.range(from, to);
 
   if (error) {
-    // DB not live yet — fall back gracefully
     console.warn("[search] Supabase query failed, using mock data:", error.message);
     return searchMockListings(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return { listings: (data ?? []).map((row: any) => mapJoinedListingToListing(row)), total: count ?? 0 };
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    listings: (data ?? []).map((row: any) => mapJoinedListingToListing(row)),
+    total: count ?? 0,
+  };
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  // Next.js 16: searchParams is a Promise — must be awaited
   const params = await searchParams;
+  const dictionary = await getServerDictionary();
+  const t = (key: TranslationKey, values?: Record<string, string | number>) =>
+    translate(dictionary, key, values);
 
-  const q            = params.q?.trim() ?? "";
+  const q = params.q?.trim() ?? "";
   const categorySlug = params.categorySlug ?? "";
-  const location     = params.location ?? "";
-  const page         = Math.max(1, parseInt(params.page ?? "1", 10));
+  const location = params.location ?? "";
+  const page = Math.max(1, parseInt(params.page ?? "1", 10));
 
   const { listings, total } = await searchListings(params);
   const totalPages = Math.max(1, Math.ceil(total / LISTINGS_PER_PAGE));
 
   const category = categorySlug ? getCategoryBySlug(categorySlug) : undefined;
   const locationLabel = location ? getLocationById(location)?.name : undefined;
-
-  // Build breadcrumb label
-  const contextLabel =
-    category?.labelFr ?? locationLabel ?? (q ? `"${q}"` : null);
+  const categoryLabel = category
+    ? t(`category.${category.slug}` as TranslationKey)
+    : undefined;
+  const contextLabel = categoryLabel ?? locationLabel ?? (q ? `"${q}"` : null);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-6 flex-wrap">
           <Link href="/" className="hover:text-gray-700">
-            Accueil
+            {t("nav.home")}
           </Link>
           <ChevronRight className="h-3 w-3" />
           <span className="text-gray-900 font-medium">
-            {contextLabel ? `Recherche : ${contextLabel}` : "Recherche"}
+            {contextLabel
+              ? t("search.breadcrumb", { label: contextLabel })
+              : t("search.title")}
           </span>
         </nav>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar — Suspense wraps the Client Component that calls useSearchParams */}
           <Suspense
             fallback={
               <aside className="w-full lg:w-60 shrink-0 space-y-4">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-20 bg-gray-100 rounded-2xl animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-20 bg-gray-100 rounded-2xl animate-pulse"
+                  />
                 ))}
               </aside>
             }
@@ -203,10 +220,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
             <SearchFilterSidebar />
           </Suspense>
 
-          {/* Results */}
           <div className="flex-1 min-w-0 space-y-6">
-            {/* Sort bar — also uses useSearchParams */}
-            <Suspense fallback={<div className="h-9 bg-gray-100 rounded-xl animate-pulse" />}>
+            <Suspense
+              fallback={<div className="h-9 bg-gray-100 rounded-xl animate-pulse" />}
+            >
               <SearchSortBar total={total} query={q || undefined} />
             </Suspense>
 
@@ -214,13 +231,17 @@ export default async function SearchPage({ searchParams }: PageProps) {
               listings={listings}
               emptyMessage={
                 q
-                  ? `Aucune annonce pour « ${q} ». Essayez des termes plus généraux.`
-                  : "Aucune annonce ne correspond à ces filtres."
+                  ? t("search.emptyForQuery", { query: q })
+                  : t("search.emptyFilters")
               }
             />
 
             {totalPages > 1 && (
-              <Suspense fallback={<div className="h-10 bg-gray-100 rounded-xl animate-pulse" />}>
+              <Suspense
+                fallback={
+                  <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+                }
+              >
                 <SearchPagination currentPage={page} totalPages={totalPages} />
               </Suspense>
             )}

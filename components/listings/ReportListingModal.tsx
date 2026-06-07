@@ -5,14 +5,16 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle, Flag, X } from "lucide-react";
 import { reportListing, type ReportReason } from "@/app/actions/reports";
 import { useAuth } from "@/components/providers/AuthProvider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import Button from "@/components/ui/Button";
 
-const REASONS: { value: ReportReason; label: string }[] = [
-  { value: "inappropriate", label: "Contenu inapproprié" },
-  { value: "spam", label: "Spam" },
-  { value: "fraud", label: "Fraude ou arnaque" },
-  { value: "wrong_category", label: "Mauvaise catégorie" },
-  { value: "other", label: "Autre" },
+const REASONS: ReportReason[] = [
+  "inappropriate",
+  "spam",
+  "fraud",
+  "wrong_category",
+  "other",
 ];
 
 interface ReportListingModalProps {
@@ -29,6 +31,7 @@ export default function ReportListingModal({
   currentPath,
 }: ReportListingModalProps) {
   const { user, loading } = useAuth();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<ReportReason>("inappropriate");
   const [details, setDetails] = useState("");
@@ -69,7 +72,7 @@ export default function ReportListingModal({
         className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-600"
       >
         <Flag className="h-3.5 w-3.5" />
-        Signaler cette annonce
+        {t("listing.report")}
       </button>
 
       {open && (
@@ -78,17 +81,17 @@ export default function ReportListingModal({
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">
-                  Signaler cette annonce
+                  {t("listing.report")}
                 </h2>
                 <p className="mt-1 text-sm text-gray-500">
-                  Aidez-nous à garder NouMarket fiable.
+                  {t("listing.reportHelp")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-lg p-1 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-                aria-label="Fermer"
+                aria-label={t("common.close")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -97,36 +100,40 @@ export default function ReportListingModal({
             {!user ? (
               <div className="space-y-4">
                 <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
-                  Connectez-vous pour signaler cette annonce.
+                  {t("listing.reportLogin")}
                 </div>
                 <Link href={`/login?next=${encodeURIComponent(currentPath)}`}>
-                  <Button fullWidth>Se connecter</Button>
+                  <Button fullWidth>{t("nav.login")}</Button>
                 </Link>
               </div>
             ) : state === "success" ? (
               <div className="space-y-4 text-center">
                 <CheckCircle className="mx-auto h-10 w-10 text-green-500" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Signalement envoyé</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    {t("listing.reportSuccessTitle")}
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Merci, notre équipe examinera cette annonce.
+                    {t("listing.reportSuccessText")}
                   </p>
                 </div>
                 <Button fullWidth onClick={() => setOpen(false)}>
-                  Fermer
+                  {t("common.close")}
                 </Button>
               </div>
             ) : state === "alreadyReported" ? (
               <div className="space-y-4 text-center">
                 <AlertTriangle className="mx-auto h-10 w-10 text-amber-500" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Déjà signalée</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    {t("listing.reportAlreadyTitle")}
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    Vous avez déjà signalé cette annonce.
+                    {t("listing.reportAlreadyText")}
                   </p>
                 </div>
                 <Button fullWidth onClick={() => setOpen(false)}>
-                  Fermer
+                  {t("common.close")}
                 </Button>
               </div>
             ) : (
@@ -134,18 +141,18 @@ export default function ReportListingModal({
                 <div className="space-y-2">
                   {REASONS.map((item) => (
                     <label
-                      key={item.value}
+                      key={item}
                       className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-100 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                     >
                       <input
                         type="radio"
                         name="reportReason"
-                        value={item.value}
-                        checked={reason === item.value}
-                        onChange={() => setReason(item.value)}
+                        value={item}
+                        checked={reason === item}
+                        onChange={() => setReason(item)}
                         className="accent-sky-500"
                       />
-                      {item.label}
+                      {t(`listing.reportReason.${item}` as TranslationKey)}
                     </label>
                   ))}
                 </div>
@@ -153,7 +160,7 @@ export default function ReportListingModal({
                 <textarea
                   value={details}
                   onChange={(event) => setDetails(event.target.value)}
-                  placeholder="Détails complémentaires (optionnel)"
+                  placeholder={t("listing.reportDetails")}
                   rows={3}
                   maxLength={1000}
                   className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
@@ -171,10 +178,10 @@ export default function ReportListingModal({
                     variant="ghost"
                     onClick={() => setOpen(false)}
                   >
-                    Annuler
+                    {t("common.cancel")}
                   </Button>
                   <Button type="button" loading={pending} onClick={handleSubmit}>
-                    Envoyer
+                    {t("common.submit")}
                   </Button>
                 </div>
               </div>

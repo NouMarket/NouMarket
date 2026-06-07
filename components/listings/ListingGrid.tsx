@@ -1,25 +1,29 @@
 import { Listing } from "@/types";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
 import ListingCard from "./ListingCard";
 
 interface ListingGridProps {
   listings: Listing[];
   compact?: boolean;
   emptyMessage?: string;
-  /** Set of listing IDs the current user has favorited — renders hearts pre-filled */
   favoritedIds?: Set<string>;
 }
 
-export default function ListingGrid({
+export default async function ListingGrid({
   listings,
   compact = false,
-  emptyMessage = "Aucune annonce pour le moment.",
+  emptyMessage,
   favoritedIds,
 }: ListingGridProps) {
+  const dictionary = await getServerDictionary();
+  const fallbackEmptyMessage = translate(dictionary, "listing.noListings");
+
   if (listings.length === 0) {
     return (
       <div className="py-16 text-center text-gray-400">
-        <p className="text-4xl mb-3">🔍</p>
-        <p className="text-sm">{emptyMessage}</p>
+        <p className="text-4xl mb-3">⌕</p>
+        <p className="text-sm">{emptyMessage ?? fallbackEmptyMessage}</p>
       </div>
     );
   }

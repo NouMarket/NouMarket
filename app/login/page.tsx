@@ -1,20 +1,20 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useActionState, useState } from "react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { signIn } from "@/app/actions/auth";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import Button from "@/components/ui/Button";
 
-// Inner component — uses useSearchParams, must be inside <Suspense>
 function LoginForm() {
   const searchParams = useSearchParams();
-  const next         = searchParams.get("next") || "/";
-  const oauthError   = searchParams.get("error");
+  const next = searchParams.get("next") || "/";
+  const oauthError = searchParams.get("error");
   const resetSuccess = searchParams.get("reset");
+  const { t } = useTranslation();
 
   const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -33,7 +33,6 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-sm">
-      {/* Logo */}
       <div className="text-center mb-8">
         <Link href="/" className="inline-flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center">
@@ -41,27 +40,26 @@ function LoginForm() {
           </div>
           <span className="font-bold text-gray-900 text-xl">NouMarket</span>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-1">Bon retour !</h1>
-        <p className="text-sm text-gray-500">Connectez-vous à votre compte</p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-1">
+          {t("auth.welcomeBack")}
+        </h1>
+        <p className="text-sm text-gray-500">{t("auth.loginSubtitle")}</p>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        {/* Password reset success */}
         {resetSuccess && (
           <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
             <CheckCircle className="h-4 w-4 flex-shrink-0" />
-            Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.
+            {t("auth.resetSuccess")}
           </div>
         )}
 
-        {/* OAuth failure */}
         {oauthError === "oauth" && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
-            La connexion avec Google a échoué. Réessayez ou utilisez votre adresse e-mail.
+            {t("auth.oauthError")}
           </div>
         )}
 
-        {/* Form error */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
             {error}
@@ -71,10 +69,9 @@ function LoginForm() {
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="next" value={next} />
 
-          {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Adresse e-mail
+              {t("auth.email")}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -90,10 +87,9 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Password */}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Mot de passe
+              {t("auth.password")}
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -111,19 +107,23 @@ function LoginForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           <div className="flex justify-end">
             <Link href="/forgot-password" className="text-xs text-sky-500 hover:text-sky-600">
-              Mot de passe oublié ?
+              {t("auth.forgotPassword")}
             </Link>
           </div>
 
           <Button type="submit" fullWidth size="lg" loading={pending}>
-            {pending ? "Connexion…" : "Se connecter"}
+            {pending ? t("auth.loggingIn") : t("auth.loginButton")}
           </Button>
         </form>
 
@@ -132,7 +132,7 @@ function LoginForm() {
             <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">
-            ou continuer avec
+            {t("auth.continueWith")}
           </div>
         </div>
 
@@ -145,22 +145,20 @@ function LoginForm() {
           loading={googleLoading}
           type="button"
         >
-          <span className="text-base">🔵</span>
-          Google
+          {t("auth.google")}
         </Button>
       </div>
 
       <p className="text-center text-sm text-gray-500 mt-6">
-        Pas encore de compte ?{" "}
+        {t("auth.noAccount")}{" "}
         <Link href="/register" className="text-sky-500 hover:text-sky-600 font-medium">
-          Créer un compte
+          {t("auth.createAccount")}
         </Link>
       </p>
     </div>
   );
 }
 
-// Page export — Suspense required because LoginForm uses useSearchParams()
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">

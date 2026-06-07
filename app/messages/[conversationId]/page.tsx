@@ -9,6 +9,9 @@ import type {
   MessageRow,
   ProfileRow,
 } from "@/types/database";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import MessageList from "@/components/messages/MessageList";
 
 interface Props {
@@ -92,6 +95,9 @@ export default async function ConversationPage({ params }: Props) {
 
   const listingRow = listing as Pick<ListingRow, "id" | "slug" | "title"> | null;
   const otherProfile = other as ProfileRow | null;
+  const dictionary = await getServerDictionary();
+  const t = (key: TranslationKey, params?: Record<string, string | number>) =>
+    translate(dictionary, key, params);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,16 +106,16 @@ export default async function ConversationPage({ params }: Props) {
           <Link
             href="/messages"
             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50"
-            aria-label="Retour aux messages"
+            aria-label={t("messages.title")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Link>
           <div className="min-w-0">
             <h1 className="truncate text-lg font-bold text-gray-900">
-              {listingRow?.title ?? "Annonce indisponible"}
+              {listingRow?.title ?? t("common.unavailableListing")}
             </h1>
             <p className="text-sm text-gray-500">
-              Conversation avec {otherProfile?.name ?? "Utilisateur"}
+              {t("messages.with", { name: otherProfile?.name ?? t("common.user") })}
             </p>
           </div>
         </div>

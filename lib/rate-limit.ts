@@ -1,15 +1,9 @@
 import "server-only";
 import { adminSupabase } from "@/lib/supabase/admin";
+import { actionError } from "@/lib/i18n/action-errors";
 
 export type RateLimitResult = { ok: true } | { ok: false; error: string };
 
-/**
- * Fixed-window rate limiter backed by Supabase (works across Vercel instances).
- *
- * @param key           Unique bucket key, e.g. "sendMessage:user-uuid"
- * @param maxRequests   Max calls allowed per window
- * @param windowSeconds Window size in seconds
- */
 export async function checkRateLimit(
   key: string,
   maxRequests: number,
@@ -27,13 +21,12 @@ export async function checkRateLimit(
   });
 
   if (error) {
-    // Fail open — never block legitimate traffic due to a DB hiccup
     console.warn("[rate-limit] check failed, failing open:", error.message);
     return { ok: true };
   }
 
   if ((data as number) > maxRequests) {
-    return { ok: false, error: "Trop de requêtes. Réessayez dans quelques instants." };
+    return { ok: false, error: await actionError("errors.rateLimit") };
   }
 
   return { ok: true };

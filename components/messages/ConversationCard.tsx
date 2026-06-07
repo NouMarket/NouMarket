@@ -10,6 +10,7 @@ interface ConversationCardProps {
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount: number;
+  emptyLastMessage: string;
 }
 
 export default function ConversationCard({
@@ -19,6 +20,7 @@ export default function ConversationCard({
   lastMessage,
   lastMessageAt,
   unreadCount,
+  emptyLastMessage,
 }: ConversationCardProps) {
   return (
     <Link
@@ -39,7 +41,7 @@ export default function ConversationCard({
           {otherParticipantName}
         </p>
         <p className="mt-1 truncate text-sm text-gray-600">
-          {lastMessage ?? "Aucun message pour le moment."}
+          {lastMessage ?? emptyLastMessage}
         </p>
       </div>
       {lastMessageAt && (

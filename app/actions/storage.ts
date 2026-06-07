@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { adminSupabase } from "@/lib/supabase/admin";
+import { actionError } from "@/lib/i18n/action-errors";
 
 export type StorageCleanupPreview = {
   archivedListingCount: number;
@@ -29,7 +30,7 @@ export async function cleanupArchivedListingImages(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autorisé." };
+  if (!user) return { error: await actionError("errors.notAuthorized") };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -37,7 +38,7 @@ export async function cleanupArchivedListingImages(
     .eq("id", user.id)
     .single();
 
-  if (!profile?.is_admin) return { error: "Accès refusé." };
+  if (!profile?.is_admin) return { error: await actionError("errors.accessDenied") };
 
   // 1. Find all archived listing IDs
   const { data: archivedListings, error: listErr } = await adminSupabase
@@ -45,7 +46,7 @@ export async function cleanupArchivedListingImages(
     .select("id")
     .eq("status", "archived");
 
-  if (listErr) return { error: "Impossible de récupérer les annonces archivées." };
+  if (listErr) return { error: await actionError("errors.storageArchivedFetch") };
 
   const archivedIds = (archivedListings ?? []).map((l) => l.id);
 
@@ -60,7 +61,7 @@ export async function cleanupArchivedListingImages(
     .select("id, url, listing_id")
     .in("listing_id", archivedIds);
 
-  if (imgErr) return { error: "Impossible de récupérer les images." };
+  if (imgErr) return { error: await actionError("errors.storageImagesFetch") };
 
   const imageRows = images ?? [];
   const listingIds = [...new Set(imageRows.map((img) => img.listing_id))];

@@ -8,6 +8,9 @@ import type {
   MessageRow,
   ProfileRow,
 } from "@/types/database";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import ConversationCard from "@/components/messages/ConversationCard";
 import Button from "@/components/ui/Button";
 
@@ -27,6 +30,10 @@ export default async function MessagesPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login?next=/messages");
+
+  const dictionary = await getServerDictionary();
+  const t = (key: TranslationKey, params?: Record<string, string | number>) =>
+    translate(dictionary, key, params);
 
   const { data: conversations } = await supabase
     .from("conversations")
@@ -64,7 +71,7 @@ export default async function MessagesPage() {
   const profileMap = byId((profiles ?? []) as ProfileRow[]);
   const messagesByConversation = new Map<string, MessageRow[]>();
 
-  for (const message of ((messages ?? []) as MessageRow[])) {
+  for (const message of (messages ?? []) as MessageRow[]) {
     const thread = messagesByConversation.get(message.conversation_id) ?? [];
     thread.push(message);
     messagesByConversation.set(message.conversation_id, thread);
@@ -74,24 +81,21 @@ export default async function MessagesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Retrouvez vos conversations avec les acheteurs et vendeurs.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("messages.title")}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t("messages.subtitle")}</p>
         </div>
 
         {visibleConversations.length === 0 ? (
           <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
             <div className="text-4xl mb-4">💬</div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Aucune conversation
+              {t("messages.emptyTitle")}
             </h2>
             <p className="mt-2 text-sm text-gray-500 mb-6">
-              Trouvez une annonce qui vous intéresse et cliquez sur
-              «&nbsp;Contacter le vendeur&nbsp;» pour démarrer un échange.
+              {t("messages.emptyText")}
             </p>
             <Link href="/search">
-              <Button>Explorer les annonces</Button>
+              <Button>{t("common.search")}</Button>
             </Link>
           </div>
         ) : (
@@ -113,11 +117,12 @@ export default async function MessagesPage() {
                 <ConversationCard
                   key={conversation.id}
                   conversationId={conversation.id}
-                  listingTitle={listing?.title ?? "Annonce indisponible"}
-                  otherParticipantName={other?.name ?? "Utilisateur"}
+                  listingTitle={listing?.title ?? t("common.unavailableListing")}
+                  otherParticipantName={other?.name ?? t("common.user")}
                   lastMessage={last?.body}
                   lastMessageAt={last?.created_at}
                   unreadCount={unreadCount}
+                  emptyLastMessage={t("messages.lastEmpty")}
                 />
               );
             })}

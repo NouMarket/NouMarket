@@ -3,22 +3,24 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { MOCK_PENDING_LISTINGS } from "@/data/listings";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
+import { getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
 import AdminPendingQueue from "@/components/admin/AdminPendingQueue";
 import AdminNav from "@/components/admin/AdminNav";
 
 export const metadata: Metadata = {
-  title: "Administration – Annonces en attente",
+  title: "Administration - Annonces en attente",
   robots: { index: false, follow: false },
 };
 
 export default async function AdminPendingPage() {
+  const dictionary = await getServerDictionary();
+  const t = (key: keyof typeof dictionary) => translate(dictionary, key);
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // proxy.ts already redirects unauthenticated requests, but a second check
-  // here gives a hard 404 if someone bypasses it (e.g. during SSG/ISR)
   if (!user) redirect("/login?next=/admin/pending");
 
   const { data: profile } = await supabase
@@ -44,7 +46,10 @@ export default async function AdminPendingPage() {
     const { data: reports } = await supabase
       .from("listing_reports")
       .select("listing_id")
-      .in("listing_id", pendingListings.map((listing) => listing.id));
+      .in(
+        "listing_id",
+        pendingListings.map((listing) => listing.id)
+      );
 
     const reportCounts = new Map<string, number>();
     for (const report of reports ?? []) {
@@ -65,9 +70,11 @@ export default async function AdminPendingPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Annonces en attente</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("admin.pendingTitle")}
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Examinez et modérez les annonces soumises par les utilisateurs.
+            {t("admin.pendingSubtitle")}
           </p>
         </div>
 

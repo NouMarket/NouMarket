@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { adminSupabase } from "@/lib/supabase/admin";
 import { getLocationById } from "@/data/locations";
+import { actionError } from "@/lib/i18n/action-errors";
 import { slugify } from "@/lib/utils";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -45,7 +46,7 @@ export async function createListing(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté pour publier une annonce." };
+  if (!user) return { error: await actionError("errors.listingPublishAuth") };
 
   const rl = await checkRateLimit(`createListing:${user.id}`, 5, 3600);
   if (!rl.ok) return { error: rl.error };
@@ -103,12 +104,12 @@ export async function createListing(
 
     // Any other DB error — fail immediately
     console.error("[createListing] listings insert error:", listingError.message);
-    return { error: "Impossible de créer l'annonce. Réessayez." };
+    return { error: await actionError("errors.createListing") };
   }
 
   if (!insertedSlug) {
     console.error("[createListing] slug collision persisted after", MAX_SLUG_RETRIES, "retries");
-    return { error: "Impossible de créer l'annonce. Réessayez." };
+    return { error: await actionError("errors.createListing") };
   }
 
   // Insert listing_images rows (if any images were uploaded)
@@ -142,7 +143,7 @@ export async function updateListingStatus(
   rejectionReason?: string
 ): Promise<UpdateStatusResult> {
   if (status === "rejected" && !rejectionReason?.trim()) {
-    return { error: "La raison du rejet est requise." };
+    return { error: await actionError("errors.rejectReasonRequired") };
   }
 
   // Verify the caller is an admin via the anon client (reads profiles table)
@@ -150,7 +151,7 @@ export async function updateListingStatus(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autorisé." };
+  if (!user) return { error: await actionError("errors.notAuthorized") };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -158,7 +159,7 @@ export async function updateListingStatus(
     .eq("id", user.id)
     .single();
 
-  if (!profile?.is_admin) return { error: "Accès refusé." };
+  if (!profile?.is_admin) return { error: await actionError("errors.accessDenied") };
 
   // Use service role to bypass RLS on the update
   const { error } = await adminSupabase
@@ -174,7 +175,7 @@ export async function updateListingStatus(
 
   if (error) {
     console.error("[updateListingStatus] error:", error.message);
-    return { error: "Mise à jour impossible. Réessayez." };
+    return { error: await actionError("errors.updateRetry") };
   }
 
   return { success: true };
@@ -207,7 +208,7 @@ export async function updateListing(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   // Fetch existing listing to verify ownership and get slug for redirect
   const { data: existing, error: fetchError } = await supabase
@@ -216,9 +217,9 @@ export async function updateListing(
     .eq("id", payload.listingId)
     .single();
 
-  if (fetchError || !existing) return { error: "Annonce introuvable." };
-  if (existing.seller_id !== user.id) return { error: "Accès refusé." };
-  if (existing.status === "archived") return { error: "Cette annonce a été supprimée." };
+  if (fetchError || !existing) return { error: await actionError("errors.listingNotFound") };
+  if (existing.seller_id !== user.id) return { error: await actionError("errors.accessDenied") };
+  if (existing.status === "archived") return { error: await actionError("errors.archivedListing") };
 
   const location = getLocationById(payload.locationId);
   const locationName = location?.isNeighborhood
@@ -246,7 +247,7 @@ export async function updateListing(
 
   if (updateError) {
     console.error("[updateListing] update error:", updateError.message);
-    return { error: "Mise à jour impossible. Réessayez." };
+    return { error: await actionError("errors.updateRetry") };
   }
 
   // Replace images: delete all existing rows, then insert the new ordered list
@@ -278,7 +279,7 @@ export async function deleteListing(listingId: string): Promise<DeleteListingRes
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const { data: existing, error: fetchError } = await supabase
     .from("listings")
@@ -286,8 +287,8 @@ export async function deleteListing(listingId: string): Promise<DeleteListingRes
     .eq("id", listingId)
     .single();
 
-  if (fetchError || !existing) return { error: "Annonce introuvable." };
-  if (existing.seller_id !== user.id) return { error: "Accès refusé." };
+  if (fetchError || !existing) return { error: await actionError("errors.listingNotFound") };
+  if (existing.seller_id !== user.id) return { error: await actionError("errors.accessDenied") };
 
   const { error } = await supabase
     .from("listings")
@@ -296,7 +297,7 @@ export async function deleteListing(listingId: string): Promise<DeleteListingRes
 
   if (error) {
     console.error("[deleteListing]", error.message);
-    return { error: "Suppression impossible. Réessayez." };
+    return { error: await actionError("errors.deleteRetry") };
   }
 
   revalidatePath("/profile");
@@ -314,7 +315,7 @@ export async function markAsSold(listingId: string): Promise<MarkAsSoldResult> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Vous devez être connecté." };
+  if (!user) return { error: await actionError("errors.authRequired") };
 
   const { data: existing, error: fetchError } = await supabase
     .from("listings")
@@ -322,9 +323,9 @@ export async function markAsSold(listingId: string): Promise<MarkAsSoldResult> {
     .eq("id", listingId)
     .single();
 
-  if (fetchError || !existing) return { error: "Annonce introuvable." };
-  if (existing.seller_id !== user.id) return { error: "Accès refusé." };
-  if (existing.status === "sold") return { error: "Déjà marquée comme vendue." };
+  if (fetchError || !existing) return { error: await actionError("errors.listingNotFound") };
+  if (existing.seller_id !== user.id) return { error: await actionError("errors.accessDenied") };
+  if (existing.status === "sold") return { error: await actionError("errors.alreadySold") };
 
   const { error } = await supabase
     .from("listings")
@@ -333,7 +334,7 @@ export async function markAsSold(listingId: string): Promise<MarkAsSoldResult> {
 
   if (error) {
     console.error("[markAsSold]", error.message);
-    return { error: "Mise à jour impossible. Réessayez." };
+    return { error: await actionError("errors.updateRetry") };
   }
 
   revalidatePath(`/listings/${existing.slug}`);

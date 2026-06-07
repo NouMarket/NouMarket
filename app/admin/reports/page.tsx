@@ -4,20 +4,15 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { adminSupabase } from "@/lib/supabase/admin";
 import type { ListingReportRow, ListingRow, ProfileRow } from "@/types/database";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { getLocale, getServerDictionary } from "@/lib/i18n/server";
+import { translate } from "@/lib/i18n/translate";
 import AdminNav from "@/components/admin/AdminNav";
 import Badge from "@/components/ui/Badge";
 
 export const metadata: Metadata = {
-  title: "Administration – Signalements",
+  title: "Administration - Signalements",
   robots: { index: false, follow: false },
-};
-
-const REASON_LABELS: Record<ListingReportRow["reason"], string> = {
-  inappropriate: "Contenu inapproprié",
-  spam: "Spam",
-  fraud: "Fraude ou arnaque",
-  wrong_category: "Mauvaise catégorie",
-  other: "Autre",
 };
 
 function byId<T extends { id: string }>(rows: T[] | null | undefined) {
@@ -25,6 +20,12 @@ function byId<T extends { id: string }>(rows: T[] | null | undefined) {
 }
 
 export default async function AdminReportsPage() {
+  const [dictionary, locale] = await Promise.all([
+    getServerDictionary(),
+    getLocale(),
+  ]);
+  const t = (key: TranslationKey, params?: Record<string, string | number>) =>
+    translate(dictionary, key, params);
   const supabase = await createClient();
   const {
     data: { user },
@@ -73,19 +74,21 @@ export default async function AdminReportsPage() {
 
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Signalements</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("admin.reportsTitle")}
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Consultez les annonces signalées par les utilisateurs.
+            {t("admin.reportsSubtitle")}
           </p>
         </div>
 
         {reportRows.length === 0 ? (
           <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900">
-              Aucun signalement
+              {t("admin.reportsEmptyTitle")}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Les futurs signalements apparaîtront ici.
+              {t("admin.reportsEmptyText")}
             </p>
           </div>
         ) : (
@@ -93,14 +96,21 @@ export default async function AdminReportsPage() {
             {reportRows.map((report) => {
               const listing = listingMap.get(report.listing_id);
               const reporter = reporterMap.get(report.reporter_id);
+              const statusKey = listing?.status
+                ? (`status.${listing.status}` as TranslationKey)
+                : undefined;
 
               return (
                 <div key={report.id} className="p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="danger">{REASON_LABELS[report.reason]}</Badge>
-                        <Badge>{listing?.status ?? "statut inconnu"}</Badge>
+                        <Badge variant="danger">
+                          {t(`listing.reportReason.${report.reason}` as TranslationKey)}
+                        </Badge>
+                        <Badge>
+                          {statusKey ? t(statusKey) : t("common.unavailableListing")}
+                        </Badge>
                       </div>
                       <h2 className="truncate font-semibold text-gray-900">
                         {listing?.slug ? (
@@ -111,15 +121,17 @@ export default async function AdminReportsPage() {
                             {listing.title}
                           </Link>
                         ) : (
-                          listing?.title ?? "Annonce indisponible"
+                          listing?.title ?? t("common.unavailableListing")
                         )}
                       </h2>
                       <p className="mt-1 text-sm text-gray-500">
-                        Signalé par {reporter?.name ?? "Utilisateur inconnu"}
+                        {t("admin.reportedBy", {
+                          name: reporter?.name ?? t("common.unknownUser"),
+                        })}
                       </p>
                     </div>
                     <p className="shrink-0 text-xs text-gray-400">
-                      {new Intl.DateTimeFormat("fr-FR", {
+                      {new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "fr-FR", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
