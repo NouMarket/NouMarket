@@ -78,6 +78,62 @@ export const tr: Dictionary = {
   "nav.privacy": "Gizlilik politikası",
   "nav.help": "Yardım & İletişim",
 
+  "legal.breadcrumbLabel": "Sayfa yolu",
+  "legal.aboutTitle": "NouMarket hakkında",
+  "legal.aboutIntro":
+    "NouMarket, Yeni Kaledonya’da yerel ilanları tek yerde toplar; alım, satım, kiralama ve takası kolaylaştırır.",
+  "legal.aboutMissionTitle": "Misyonumuz",
+  "legal.aboutMissionText":
+    "NouMarket, Yeni Kaledonya’daki kullanıcıların yakınındaki ürünleri, hizmetleri ve fırsatları sade, anlaşılır ve güvenilir bir deneyimle bulmasına yardımcı olur.",
+  "legal.aboutMarketplaceTitle": "Yeni Kaledonya için tasarlanmış pazaryeri",
+  "legal.aboutMarketplaceText":
+    "Platform; belediyeleri, yerel alışkanlıkları, XPF fiyatlarını ve Yeni Kaledonya pazarına uygun kategorileri öne çıkarır. Kullanıcıların yayımladığı içerikler çevrilmez veya değiştirilmez.",
+  "legal.aboutContactTitle": "İletişim",
+  "legal.aboutContactText":
+    "Bir soru, öneri veya destek talebi için yardım sayfasından ya da platformda belirtilen iletişim kanallarından NouMarket ekibine ulaşabilirsiniz.",
+  "legal.termsTitle": "Kullanım şartları",
+  "legal.termsIntro":
+    "Bu kurallar, NouMarket’i herkes için yararlı, saygılı ve güvenli bir pazaryeri olarak tutmak için geçerlidir.",
+  "legal.termsMarketplaceTitle": "Pazaryerinin işleyişi",
+  "legal.termsMarketplaceText":
+    "NouMarket, kullanıcıları yerel ilanlar üzerinden buluşturur. İşlem, buluşma, ödeme ve ürün teslimi alıcı ile satıcı arasında doğrudan organize edilir.",
+  "legal.termsResponsibilitiesTitle": "Kullanıcı sorumlulukları",
+  "legal.termsResponsibilitiesText":
+    "Her kullanıcı doğru bilgi vermeli, diğer üyelere saygılı davranmalı, hesabını korumalı ve herhangi bir işlemden önce önemli ayrıntıları kontrol etmelidir.",
+  "legal.termsListingRulesTitle": "İlan kuralları",
+  "legal.termsListingRulesText":
+    "İlanlar dürüst olmalı, doğru kategoride yayımlanmalı, izinli görseller kullanmalı ve yasa dışı, yanıltıcı, tehlikeli ya da kötüye kullanım içeren içerik sunmamalıdır.",
+  "legal.privacyTitle": "Gizlilik politikası",
+  "legal.privacyIntro":
+    "Bu sayfa, NouMarket’in hizmeti sunmak ve kullanıcıları korumak için kullandığı temel verileri açıklar.",
+  "legal.privacyDataTitle": "Toplanan veriler",
+  "legal.privacyDataText":
+    "NouMarket; hesap bilgilerini, yayımlanan ilanları, favorileri, şikayetleri, hizmet için gerekli teknik verileri ve sizin sağlamayı seçtiğiniz bilgileri işleyebilir.",
+  "legal.privacyCookiesTitle": "Çerezler ve tercihler",
+  "legal.privacyCookiesText":
+    "Oturumunuzu korumak, dil seçiminizi hatırlamak ve arayüzün çalışmasını iyileştirmek için çerezler veya yerel depolama kullanılabilir.",
+  "legal.privacyMessagingTitle": "Mesajlaşma verileri",
+  "legal.privacyMessagingText":
+    "Alıcılar ve satıcılar arasındaki mesajlar, konuşmanın devam edebilmesi, kullanıcı tarafında silinen konuşmaların yönetilmesi ve güvenlik kurallarının uygulanması için saklanır.",
+  "legal.privacyRightsTitle": "Haklarınız",
+  "legal.privacyRightsText":
+    "Uygun olduğu durumlarda verilerinize erişim, düzeltme veya silme talebinde bulunabilirsiniz; bu talepler yasal yükümlülükler ve platform güvenliği ihtiyaçları dikkate alınarak değerlendirilir.",
+  "legal.helpTitle": "Yardım & İletişim",
+  "legal.helpIntro":
+    "NouMarket’i kullanmak ve gerektiğinde destek istemek için temel yanıtları burada bulabilirsiniz.",
+  "legal.helpFaqTitle": "SSS",
+  "legal.helpFaqText":
+    "NouMarket; yerel ilanları görüntülemenizi, kendi ilanlarınızı yayımlamanızı, satıcılarla iletişim kurmanızı ve kurallara uymayan içerikleri şikayet etmenizi sağlar.",
+  "legal.helpCreateListingTitle": "İlan oluşturma",
+  "legal.helpCreateListingText":
+    "Giriş yapın, İlan ver seçeneğini kullanın, başlık, açıklama, fiyat, kategori, konum ve net fotoğraflar ekleyin; ardından gerekiyorsa ilanı onaya gönderin.",
+  "legal.helpContactSellersTitle": "Satıcılarla iletişim",
+  "legal.helpContactSellersText":
+    "Bir ilanda, satıcıyla konuşma başlatmak için iletişim düğmesini kullanın. Mesajlar ilgili ilana bağlı kalır.",
+  "legal.helpReportListingsTitle": "İlanları şikayet etme",
+  "legal.helpReportListingsText":
+    "Bir ilan sahte, uygunsuz, yanlış kategoride veya kurallara aykırı görünüyorsa ilan sayfasındaki şikayet düğmesini kullanın.",
+
   "category.immobilier": "Emlak",
   "category.vehicules": "Araçlar",
   "category.bateaux": "Tekneler",

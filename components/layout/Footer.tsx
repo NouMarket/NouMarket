@@ -69,12 +69,12 @@ export default async function Footer() {
             </h3>
             <ul className="space-y-2">
               {[
-                { href: "#", label: t("nav.about") },
-                { href: "#", label: t("nav.terms") },
-                { href: "#", label: t("nav.privacy") },
-                { href: "#", label: t("nav.help") },
+                { href: "/about", label: t("nav.about") },
+                { href: "/terms", label: t("nav.terms") },
+                { href: "/privacy", label: t("nav.privacy") },
+                { href: "/help", label: t("nav.help") },
               ].map((link) => (
-                <li key={link.href}>
+                <li key={`${link.href}-${link.label}`}>
                   <Link href={link.href} className="text-sm hover:text-white transition-colors">
                     {link.label}
                   </Link>

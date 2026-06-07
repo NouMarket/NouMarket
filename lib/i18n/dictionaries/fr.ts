@@ -76,6 +76,62 @@ export const fr = {
   "nav.privacy": "Politique de confidentialité",
   "nav.help": "Aide & Contact",
 
+  "legal.breadcrumbLabel": "Fil d’Ariane",
+  "legal.aboutTitle": "À propos de NouMarket",
+  "legal.aboutIntro":
+    "NouMarket rassemble les annonces locales pour acheter, vendre, louer et échanger plus facilement en Nouvelle-Calédonie.",
+  "legal.aboutMissionTitle": "Notre mission",
+  "legal.aboutMissionText":
+    "NouMarket aide les habitants de Nouvelle-Calédonie à trouver des biens, des services et des opportunités près de chez eux, avec une expérience simple, claire et fiable.",
+  "legal.aboutMarketplaceTitle": "Une marketplace pensée pour la Nouvelle-Calédonie",
+  "legal.aboutMarketplaceText":
+    "La plateforme met en avant les communes, les usages locaux, les prix en XPF et des catégories adaptées au marché calédonien, sans traduire ni modifier le contenu publié par les utilisateurs.",
+  "legal.aboutContactTitle": "Contact",
+  "legal.aboutContactText":
+    "Pour une question, une suggestion ou une demande d’assistance, contactez l’équipe NouMarket depuis la page d’aide ou via les canaux de contact indiqués sur la plateforme.",
+  "legal.termsTitle": "Conditions d’utilisation",
+  "legal.termsIntro":
+    "Ces règles encadrent l’utilisation de NouMarket afin de garder une marketplace utile, respectueuse et sûre pour tous.",
+  "legal.termsMarketplaceTitle": "Fonctionnement de la marketplace",
+  "legal.termsMarketplaceText":
+    "NouMarket met en relation des utilisateurs autour d’annonces locales. Les transactions, rendez-vous, paiements et remises d’articles sont organisés directement entre acheteurs et vendeurs.",
+  "legal.termsResponsibilitiesTitle": "Responsabilités des utilisateurs",
+  "legal.termsResponsibilitiesText":
+    "Chaque utilisateur doit fournir des informations exactes, respecter les autres membres, protéger ses accès et vérifier les détails importants avant toute transaction.",
+  "legal.termsListingRulesTitle": "Règles de publication",
+  "legal.termsListingRulesText":
+    "Les annonces doivent être honnêtes, classées dans la bonne catégorie, illustrées avec des images autorisées et ne pas proposer de contenu illégal, trompeur, dangereux ou abusif.",
+  "legal.privacyTitle": "Politique de confidentialité",
+  "legal.privacyIntro":
+    "Cette page explique les principales données utilisées par NouMarket pour fournir le service et protéger les utilisateurs.",
+  "legal.privacyDataTitle": "Données collectées",
+  "legal.privacyDataText":
+    "NouMarket peut traiter les informations de compte, les annonces publiées, les favoris, les signalements, les données techniques nécessaires au service et les informations que vous choisissez de fournir.",
+  "legal.privacyCookiesTitle": "Cookies et préférences",
+  "legal.privacyCookiesText":
+    "Des cookies ou le stockage local peuvent être utilisés pour garder votre session, mémoriser votre langue et améliorer le fonctionnement de l’interface.",
+  "legal.privacyMessagingTitle": "Données de messagerie",
+  "legal.privacyMessagingText":
+    "Les messages échangés entre acheteurs et vendeurs sont conservés pour permettre la conversation, gérer les conversations supprimées côté utilisateur et appliquer les règles de sécurité.",
+  "legal.privacyRightsTitle": "Vos droits",
+  "legal.privacyRightsText":
+    "Vous pouvez demander l’accès, la correction ou la suppression de vos données lorsque cela est applicable, sous réserve des obligations légales et des besoins de sécurité de la plateforme.",
+  "legal.helpTitle": "Aide & Contact",
+  "legal.helpIntro":
+    "Retrouvez les réponses essentielles pour utiliser NouMarket et demander de l’aide lorsque c’est nécessaire.",
+  "legal.helpFaqTitle": "FAQ",
+  "legal.helpFaqText":
+    "NouMarket permet de consulter des annonces locales, de publier ses propres annonces, de contacter des vendeurs et de signaler les contenus qui ne respectent pas les règles.",
+  "legal.helpCreateListingTitle": "Créer une annonce",
+  "legal.helpCreateListingText":
+    "Connectez-vous, choisissez Déposer une annonce, ajoutez un titre, une description, un prix, une catégorie, une localisation et des photos claires, puis envoyez l’annonce pour validation si nécessaire.",
+  "legal.helpContactSellersTitle": "Contacter les vendeurs",
+  "legal.helpContactSellersText":
+    "Depuis une annonce, utilisez le bouton de contact pour ouvrir une conversation avec le vendeur. Les messages restent liés à l’annonce concernée.",
+  "legal.helpReportListingsTitle": "Signaler une annonce",
+  "legal.helpReportListingsText":
+    "Si une annonce semble frauduleuse, inappropriée, mal classée ou contraire aux règles, utilisez le bouton de signalement présent sur la page de l’annonce.",
+
   "category.immobilier": "Immobilier",
   "category.vehicules": "Véhicules",
   "category.bateaux": "Bateaux",
