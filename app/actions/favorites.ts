@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { notifyListingFavorited } from "@/lib/notifications";
 
 export async function addFavorite(
   listingId: string
@@ -28,6 +29,8 @@ export async function addFavorite(
   }
 
   revalidatePath("/favorites");
+  // Notify seller (fire-and-forget; skips self-favorites inside the helper)
+  void notifyListingFavorited(listingId, user.id);
   return { success: true };
 }
 

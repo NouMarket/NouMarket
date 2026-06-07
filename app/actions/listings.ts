@@ -8,6 +8,7 @@ import { getLocationById } from "@/data/locations";
 import { actionError } from "@/lib/i18n/action-errors";
 import { slugify } from "@/lib/utils";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { notifyListingModerated } from "@/lib/notifications";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -177,6 +178,9 @@ export async function updateListingStatus(
     console.error("[updateListingStatus] error:", error.message);
     return { error: await actionError("errors.updateRetry") };
   }
+
+  // Notify the listing seller (fire-and-forget — does not affect response time)
+  void notifyListingModerated(listingId, status, rejectionReason);
 
   return { success: true };
 }

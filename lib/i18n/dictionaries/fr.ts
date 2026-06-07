@@ -406,6 +406,25 @@ export const fr = {
   "admin.betaPoints": "{count} points",
   "admin.betaFooter": "Page interne — non indexée. Réinitialisez les cases à chaque cycle de test.",
 
+  "nav.notifications": "Notifications",
+
+  "notifications.title": "Notifications",
+  "notifications.empty": "Aucune notification",
+  "notifications.emptyText": "Vous n'avez pas encore de notification.",
+  "notifications.markAllRead": "Tout marquer comme lu",
+  "notifications.viewAll": "Voir toutes les notifications",
+
+  "notif.listing_approved.title": "Annonce approuvée",
+  "notif.listing_approved.body": "Votre annonce « {title} » est maintenant en ligne.",
+  "notif.listing_rejected.title": "Annonce non publiée",
+  "notif.listing_rejected.body": "Votre annonce « {title} » n'a pas été publiée.",
+  "notif.new_message.title": "Nouveau message",
+  "notif.new_message.body": "{name} vous a envoyé un message.",
+  "notif.listing_favorited.title": "Mis en favori",
+  "notif.listing_favorited.body": "Votre annonce « {title} » a été ajoutée aux favoris.",
+  "notif.listing_reported.title": "Nouveau signalement",
+  "notif.listing_reported.body": "L'annonce « {title} » a été signalée.",
+
   "seller.activeListings": "annonces actives",
   "seller.completedSales": "ventes réalisées",
   "seller.listingsBy": "Annonces de {name}",

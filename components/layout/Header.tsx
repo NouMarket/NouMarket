@@ -12,6 +12,7 @@ import {
   ChevronDown,
   LogOut,
   MessageCircle,
+  Bell,
 } from "lucide-react";
 import { CATEGORIES } from "@/data/categories";
 import { SITE_NAME } from "@/lib/constants";
@@ -23,6 +24,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { signOut } from "@/app/actions/auth";
 import Button from "@/components/ui/Button";
 import UnreadBadge from "@/components/messages/UnreadBadge";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header() {
   const { user, profile, loading } = useAuth();
@@ -156,6 +158,13 @@ export default function Header() {
                 className="absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]"
               />
             </Link>
+
+            <NotificationBell
+              onOpen={() => {
+                setCategoryOpen(false);
+                setUserMenuOpen(false);
+              }}
+            />
 
             <Link
               href="/favorites"
@@ -304,6 +313,13 @@ export default function Header() {
             >
               <MessageCircle className="h-4 w-4" /> {t("nav.messages")}
               <UnreadBadge count={displayedUnreadCount} className="ml-auto" />
+            </Link>
+            <Link
+              href="/notifications"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Bell className="h-4 w-4" /> {t("nav.notifications")}
             </Link>
             <Link
               href="/favorites"

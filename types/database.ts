@@ -386,6 +386,51 @@ export type Database = {
         Update: { key?: string; window_start?: string; count?: number };
         Relationships: [];
       };
+
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          href: string | null;
+          read_at: string | null;
+          created_at: string;
+          metadata: Json | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          href?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+          metadata?: Json | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          body?: string;
+          href?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+          metadata?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
 
     Views: EmptyRecord;
@@ -416,3 +461,4 @@ export type FavoriteRow = Database["public"]["Tables"]["favorites"]["Row"];
 export type ConversationRow = Database["public"]["Tables"]["conversations"]["Row"];
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 export type ListingReportRow = Database["public"]["Tables"]["listing_reports"]["Row"];
+export type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];

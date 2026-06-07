@@ -84,5 +84,6 @@ export const config = {
     "/profile/:path*",
     "/favorites/:path*",
     "/messages/:path*",
+    "/notifications/:path*",
   ],
 };

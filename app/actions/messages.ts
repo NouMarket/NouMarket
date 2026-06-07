@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { notifyNewMessage } from "@/lib/notifications";
 import type { ConversationRow, ListingRow, MessageRow } from "@/types/database";
 
 type ActionResult<T> = T | { error: string };
@@ -129,6 +130,19 @@ export async function sendMessage(
     .single();
 
   if (error || !message) return { error: await actionError("errors.messageSend") };
+
+  // Notify receiver (fire-and-forget)
+  const { conversation } = visible;
+  const receiverId =
+    conversation.buyer_id === user.id
+      ? conversation.seller_id
+      : conversation.buyer_id;
+  void notifyNewMessage({
+    receiverId,
+    senderId: user.id,
+    conversationId,
+    listingId: conversation.listing_id,
+  });
 
   revalidatePath("/messages");
   revalidatePath(`/messages/${conversationId}`);

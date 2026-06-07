@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { notifyAdminsNewReport } from "@/lib/notifications";
 import type { ListingRow, ListingReportRow } from "@/types/database";
 
 export type ReportReason = ListingReportRow["reason"];
@@ -56,7 +57,11 @@ export async function reportListing(
     details: details?.trim() ? details.trim() : null,
   });
 
-  if (!error) return { success: true };
+  if (!error) {
+    // Notify admin users (fire-and-forget)
+    void notifyAdminsNewReport(listingId);
+    return { success: true };
+  }
   if (error.code === "23505") return { alreadyReported: true };
 
   return { error: await actionError("errors.reportRetry") };

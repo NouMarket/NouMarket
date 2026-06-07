@@ -408,6 +408,25 @@ export const tr: Dictionary = {
   "admin.betaPoints": "{count} madde",
   "admin.betaFooter": "Dahili sayfa — indekslenmez. Her test döngüsünde kutuları sıfırlayın.",
 
+  "nav.notifications": "Bildirimler",
+
+  "notifications.title": "Bildirimler",
+  "notifications.empty": "Bildirim yok",
+  "notifications.emptyText": "Henüz bildiriminiz yok.",
+  "notifications.markAllRead": "Tümünü okundu işaretle",
+  "notifications.viewAll": "Tüm bildirimleri gör",
+
+  "notif.listing_approved.title": "İlan onaylandı",
+  "notif.listing_approved.body": "« {title} » ilanınız şimdi yayında.",
+  "notif.listing_rejected.title": "İlan yayınlanamadı",
+  "notif.listing_rejected.body": "« {title} » ilanınız yayınlanamadı.",
+  "notif.new_message.title": "Yeni mesaj",
+  "notif.new_message.body": "{name} size mesaj gönderdi.",
+  "notif.listing_favorited.title": "Favorilere eklendi",
+  "notif.listing_favorited.body": "« {title} » ilanınız favorilere eklendi.",
+  "notif.listing_reported.title": "Yeni şikayet",
+  "notif.listing_reported.body": "« {title} » ilanı şikayet edildi.",
+
   "seller.activeListings": "aktif ilan",
   "seller.completedSales": "tamamlanan satış",
   "seller.listingsBy": "{name} adlı kullanıcının ilanları",
