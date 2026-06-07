@@ -33,6 +33,13 @@ export type Database = {
           response_rate: number | null;
           member_since: string;
           updated_at: string;
+          phone: string | null;
+          phone_verified_at: string | null;
+          identity_verified_at: string | null;
+          verification_status: "none" | "pending" | "verified" | "rejected";
+          verification_note: string | null;
+          verification_requested_at: string | null;
+          last_active_at: string | null;
         };
         Insert: {
           id: string;
@@ -46,6 +53,13 @@ export type Database = {
           response_rate?: number | null;
           member_since?: string;
           updated_at?: string;
+          phone?: string | null;
+          phone_verified_at?: string | null;
+          identity_verified_at?: string | null;
+          verification_status?: "none" | "pending" | "verified" | "rejected";
+          verification_note?: string | null;
+          verification_requested_at?: string | null;
+          last_active_at?: string | null;
         };
         Update: {
           id?: string;
@@ -59,6 +73,13 @@ export type Database = {
           response_rate?: number | null;
           member_since?: string;
           updated_at?: string;
+          phone?: string | null;
+          phone_verified_at?: string | null;
+          identity_verified_at?: string | null;
+          verification_status?: "none" | "pending" | "verified" | "rejected";
+          verification_note?: string | null;
+          verification_requested_at?: string | null;
+          last_active_at?: string | null;
         };
         Relationships: [];
       };

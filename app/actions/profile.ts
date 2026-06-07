@@ -14,6 +14,7 @@ export type UpdateProfilePayload = {
   bio: string;
   locationId: string;
   avatarUrl?: string | null;
+  phone?: string;
 };
 
 export type UpdateProfileResult = { error: string };
@@ -41,7 +42,7 @@ export async function updateProfile(
       : location.name
     : null;
 
-  // Build update object — only include avatarUrl if explicitly provided
+  // Build update object — only include avatarUrl/phone if explicitly provided
   const update: ProfileUpdate = {
     name,
     bio: bio || null,
@@ -52,6 +53,10 @@ export async function updateProfile(
 
   if (payload.avatarUrl !== undefined) {
     update.avatar_url = payload.avatarUrl ?? null;
+  }
+
+  if (payload.phone !== undefined) {
+    update.phone = payload.phone.trim() || null;
   }
 
   const { error } = await supabase

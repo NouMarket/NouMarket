@@ -10,7 +10,9 @@ export type NotificationType =
   | "listing_rejected"
   | "new_message"
   | "listing_favorited"
-  | "listing_reported";
+  | "listing_reported"
+  | "verification_approved"
+  | "verification_rejected";
 
 interface NotifPayload {
   type: NotificationType;
@@ -171,6 +173,23 @@ export async function notifyListingFavorited(
       listingTitle: listing.title,
       listingSlug: listing.slug,
     },
+  });
+}
+
+/**
+ * Notify a user when their verification request is approved or rejected.
+ * Called from app/actions/verification.ts.
+ */
+export async function notifyVerificationResult(
+  userId: string,
+  approved: boolean
+): Promise<void> {
+  await insertNotification(userId, {
+    type: approved ? "verification_approved" : "verification_rejected",
+    title: "",
+    body: "",
+    href: "/profile",
+    metadata: null,
   });
 }
 

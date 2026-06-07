@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Calendar, Star, Package, ShoppingBag } from "lucide-react";
+import { MapPin, Calendar, Star, Package, ShoppingBag, CheckCircle, Clock, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import { buildPersonSchema } from "@/lib/jsonld";
@@ -59,7 +59,7 @@ export default async function SellerPage({ params }: Props) {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("name, avatar_url, trust_level, location_name, bio, response_rate, member_since")
+      .select("name, avatar_url, trust_level, location_name, bio, response_rate, member_since, phone_verified_at, identity_verified_at, verification_status")
       .eq("id", userId)
       .single(),
     supabase
@@ -145,6 +145,23 @@ export default async function SellerPage({ params }: Props) {
                 <span className="flex items-center gap-1">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                   {t("profile.responses", { count: profile.response_rate })}
+                </span>
+              )}
+              {profile.verification_status === "verified" && profile.identity_verified_at ? (
+                <span className="flex items-center gap-1 text-blue-700 font-medium">
+                  <CheckCircle className="h-3 w-3 text-blue-500" />
+                  {t("verification.identityVerified")}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-gray-400">
+                  <Clock className="h-3 w-3" />
+                  {t("verification.identityComingSoon")}
+                </span>
+              )}
+              {profile.phone_verified_at && (
+                <span className="flex items-center gap-1 text-green-700 font-medium">
+                  <Phone className="h-3 w-3 text-green-500" />
+                  {t("verification.phoneVerified")}
                 </span>
               )}
             </div>

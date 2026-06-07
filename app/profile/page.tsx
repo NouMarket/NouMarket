@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Settings, Star, Package, MapPin, Calendar, CheckCircle } from "lucide-react";
+import { Settings, Star, Package, MapPin, Calendar, CheckCircle, Clock, ShieldCheck, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { mapJoinedListingToListing, type JoinedListing } from "@/lib/mappers";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
@@ -11,6 +11,7 @@ import { translate } from "@/lib/i18n/translate";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import ProfileListingCard from "@/components/profile/ProfileListingCard";
+import RequestVerificationButton from "@/components/profile/RequestVerificationButton";
 import { trustLevelColor } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -131,6 +132,40 @@ export default async function ProfilePage({ searchParams }: Props) {
               {t("common.edit")}
             </Button>
           </Link>
+        </div>
+
+        {/* Verification status */}
+        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2 text-sm">
+            {profile?.verification_status === "verified" ? (
+              <>
+                <ShieldCheck className="h-4 w-4 text-blue-500" />
+                <span className="text-blue-700 font-medium">
+                  {t("verification.verified")}
+                </span>
+              </>
+            ) : profile?.verification_status === "pending" ? (
+              <>
+                <Clock className="h-4 w-4 text-amber-500" />
+                <span className="text-amber-700">{t("verification.pending")}</span>
+              </>
+            ) : profile?.verification_status === "rejected" ? (
+              <>
+                <ShieldAlert className="h-4 w-4 text-red-500" />
+                <span className="text-red-700">{t("verification.rejected")}</span>
+              </>
+            ) : (
+              <>
+                <Clock className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-500">{t("verification.none")}</span>
+              </>
+            )}
+          </div>
+          {(profile?.verification_status === "none" ||
+            profile?.verification_status === "rejected" ||
+            !profile?.verification_status) && (
+            <RequestVerificationButton />
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Camera } from "lucide-react";
+import { Camera, CheckCircle, Clock, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ALL_LOCATIONS } from "@/data/locations";
 import { updateProfile } from "@/app/actions/profile";
@@ -26,6 +26,7 @@ export default function EditProfileForm({ profile }: Props) {
   const [name, setName] = useState(profile.name ?? "");
   const [bio, setBio] = useState(profile.bio ?? "");
   const [locationId, setLocationId] = useState(profile.location_id ?? "");
+  const [phone, setPhone] = useState(profile.phone ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     profile.avatar_url ?? null
   );
@@ -89,6 +90,7 @@ export default function EditProfileForm({ profile }: Props) {
         bio,
         locationId,
         avatarUrl: avatarUrl ?? null,
+        phone,
       });
       if ("error" in result) {
         setError(result.error);
@@ -185,6 +187,65 @@ export default function EditProfileForm({ profile }: Props) {
         onChange={(e) => setLocationId(e.target.value)}
         placeholder={t("profile.locationPlaceholder")}
       />
+
+      <Input
+        label={t("profile.phone")}
+        type="tel"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        placeholder={t("profile.phonePlaceholder")}
+        hint={t("profile.phoneNote")}
+      />
+
+      {/* Verification status (read-only display) */}
+      <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+        <p className="text-sm font-medium text-gray-700 mb-2">
+          {t("profile.verificationStatus")}
+        </p>
+        <div className="flex items-center gap-2 text-sm">
+          {profile.verification_status === "verified" ? (
+            <>
+              <CheckCircle className="h-4 w-4 text-blue-500 shrink-0" />
+              <span className="text-blue-700 font-medium">
+                {t("verification.verified")}
+              </span>
+            </>
+          ) : profile.verification_status === "pending" ? (
+            <>
+              <Clock className="h-4 w-4 text-amber-500 shrink-0" />
+              <span className="text-amber-700">{t("verification.pending")}</span>
+            </>
+          ) : profile.verification_status === "rejected" ? (
+            <>
+              <ShieldAlert className="h-4 w-4 text-red-500 shrink-0" />
+              <span className="text-red-700">
+                {t("verification.rejected")}
+                {profile.verification_note && (
+                  <span className="ml-1 font-normal text-red-600">
+                    — {profile.verification_note}
+                  </span>
+                )}
+              </span>
+            </>
+          ) : (
+            <>
+              <Clock className="h-4 w-4 text-gray-400 shrink-0" />
+              <span className="text-gray-500">{t("verification.none")}</span>
+            </>
+          )}
+        </div>
+        {profile.phone_verified_at && (
+          <p className="mt-1.5 text-xs text-green-700 flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" />
+            {t("verification.phoneVerified")}
+          </p>
+        )}
+        {!profile.phone_verified_at && (
+          <p className="mt-1.5 text-xs text-gray-400">
+            {t("verification.comingSoon")}
+          </p>
+        )}
+      </div>
 
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">

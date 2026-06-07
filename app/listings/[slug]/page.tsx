@@ -10,7 +10,6 @@ import {
   Heart,
   Share2,
   Tag,
-  Star,
   CheckCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -25,16 +24,14 @@ import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import {
   formatPrice,
   formatDate,
-  trustLevelLabel,
-  trustLevelColor,
 } from "@/lib/utils";
 import type { Listing } from "@/types";
-import Badge from "@/components/ui/Badge";
 import ListingGrid from "@/components/listings/ListingGrid";
 import ContactSellerButton from "@/components/messages/ContactSellerButton";
 import ReportListingModal from "@/components/listings/ReportListingModal";
 import SellerListingActions from "@/components/listings/SellerListingActions";
 import ViewTracker from "@/components/listings/ViewTracker";
+import SellerTrustCard from "@/components/profile/SellerTrustCard";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -56,24 +53,6 @@ async function getListing(slug: string): Promise<Listing | null> {
   }
 
   return mapJoinedListingToListing(data as JoinedListing);
-}
-
-/** Seller stats for the listing detail sidebar. */
-async function getSellerStats(
-  sellerId: string
-): Promise<{ active: number; sold: number }> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("listings")
-    .select("status")
-    .eq("seller_id", sellerId)
-    .in("status", ["active", "sold"]);
-
-  const rows = data ?? [];
-  return {
-    active: rows.filter((r) => r.status === "active").length,
-    sold: rows.filter((r) => r.status === "sold").length,
-  };
 }
 
 /**
@@ -172,12 +151,7 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
   const t = (key: TranslationKey, params?: Record<string, string | number>) =>
     translate(dictionary, key, params);
   const category = getCategoryBySlug(listing.categorySlug);
-  const trustColor = trustLevelColor(listing.seller.trustLevel);
-  const trustLabel = trustLevelLabel(listing.seller.trustLevel);
-  const [related, sellerStats] = await Promise.all([
-    getRelated(listing.categorySlug, slug, listing.locationId),
-    getSellerStats(listing.seller.id),
-  ]);
+  const related = await getRelated(listing.categorySlug, slug, listing.locationId);
   const canReport = user && user.id !== listing.seller.id;
   const isSeller = user?.id === listing.seller.id;
   const jsonLd = buildListingJsonLd(listing, category, SITE_URL);
@@ -364,57 +338,11 @@ export default async function ListingDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Seller card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">{t("listing.seller")}</h3>
-            <div className="flex items-center gap-3 mb-4">
-              <Link href={`/sellers/${listing.seller.id}`} className="shrink-0">
-                <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold text-sm overflow-hidden">
-                  {listing.seller.avatar ? (
-                    <Image
-                      src={listing.seller.avatar}
-                      alt={listing.seller.name}
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    listing.seller.name.charAt(0).toUpperCase()
-                  )}
-                </div>
-              </Link>
-              <div>
-                <Link
-                  href={`/sellers/${listing.seller.id}`}
-                  className="text-sm font-medium text-gray-900 hover:text-sky-600 transition-colors"
-                >
-                  {listing.seller.name}
-                </Link>
-                <div className="mt-0.5">
-                  <Badge className={trustColor}>{trustLabel}</Badge>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm text-center">
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="font-bold text-gray-900">{sellerStats.active}</p>
-                <p className="text-xs text-gray-500 mt-0.5">actives</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="font-bold text-gray-900">{sellerStats.sold}</p>
-                <p className="text-xs text-gray-500 mt-0.5">vendues</p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-1 text-xs text-gray-500">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              {t("common.memberSince", { date: listing.seller.memberSince })}
-            </div>
-            <Link
-              href={`/sellers/${listing.seller.id}`}
-              className="mt-3 block text-center text-xs text-sky-600 hover:text-sky-700 font-medium"
-            >
-              Voir le profil →
-            </Link>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              {t("listing.seller")}
+            </h3>
+            <SellerTrustCard userId={listing.seller.id} />
           </div>
 
           {/* Seller management actions */}
