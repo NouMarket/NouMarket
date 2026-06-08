@@ -213,6 +213,7 @@ export const fr = {
   "auth.updatePassword": "Mettre à jour le mot de passe",
   "auth.expiredLink": "Lien expiré ?",
   "auth.requestNewLink": "Demander un nouveau lien",
+  "auth.emailAlreadyUsed": "Cette adresse e-mail est déjà utilisée.",
 
   "listing.featured": "À la une",
   "listing.description": "Description",

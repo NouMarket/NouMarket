@@ -215,6 +215,7 @@ export const tr: Dictionary = {
   "auth.updatePassword": "Şifreyi güncelle",
   "auth.expiredLink": "Bağlantı süresi doldu mu?",
   "auth.requestNewLink": "Yeni bağlantı iste",
+  "auth.emailAlreadyUsed": "Bu e-posta adresi zaten kullanılıyor.",
 
   "listing.featured": "Öne çıkan",
   "listing.description": "Açıklama",

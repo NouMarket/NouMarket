@@ -56,9 +56,17 @@ export async function signUp(
 
   if (error) {
     if (error.message.includes("already registered")) {
-      return actionError("errors.emailUsed");
+      // Email confirmation disabled: Supabase surfaces the duplicate directly.
+      return actionError("auth.emailAlreadyUsed");
     }
     return actionError("errors.createAccount");
+  }
+
+  // Email confirmation enabled: Supabase returns a fake-success (error=null,
+  // session=null) with an empty identities array for duplicate emails to
+  // avoid timing-based enumeration. Detect and surface it as a form error.
+  if (!data.user || data.user.identities?.length === 0) {
+    return actionError("auth.emailAlreadyUsed");
   }
 
   if (!data.session) {
