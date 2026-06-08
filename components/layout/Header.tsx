@@ -34,7 +34,9 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const displayName = profile?.name ?? user?.email?.split("@")[0] ?? "";
+  // Only use profile.name — never fall back to user.email.
+  // If profile is null (deleted account / not yet loaded), show login state.
+  const displayName = profile?.name ?? "";
   const initials = displayName.charAt(0).toUpperCase();
   const userId = user?.id;
   const displayedUnreadCount = userId ? unreadCount : 0;
@@ -178,7 +180,7 @@ export default function Header() {
 
             {!loading && (
               <>
-                {user ? (
+                {user && profile ? (
                   <div className="relative">
                     <button
                       onClick={() => {
@@ -329,7 +331,7 @@ export default function Header() {
               <Heart className="h-4 w-4" /> {t("nav.myFavorites")}
             </Link>
 
-            {user ? (
+            {user && profile ? (
               <>
                 <Link
                   href="/profile"

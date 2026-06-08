@@ -48,7 +48,7 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // getUser() validates the JWT locally — no extra DB round-trip
+  // getUser() validates the JWT with the Supabase auth server (authoritative).
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -61,15 +61,27 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // ── Profile existence check — all protected routes ────────────
+  // auth.users controls the Supabase session; public.profiles controls the
+  // NouMarket account identity. A missing profiles row means the account was
+  // deleted (e.g. by an admin) while the session cookie remained valid.
+  // Redirect to /login for all protected routes in this case.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
   // ── Admin routes — require profiles.is_admin = true ──────────
   if (pathname.startsWith("/admin")) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.is_admin) {
+    if (!profile.is_admin) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { adminSupabase } from "@/lib/supabase/admin";
 import { actionError } from "@/lib/i18n/action-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -55,11 +56,27 @@ export async function signUp(
   });
 
   if (error) {
+    // Log error details server-side for diagnostics — never log password
+    console.error("[signUp] auth error:", {
+      code: error.code,
+      message: error.message,
+      status: error.status,
+    });
     if (error.message.includes("already registered")) {
       // Email confirmation disabled: Supabase surfaces the duplicate directly.
       return actionError("auth.emailAlreadyUsed");
     }
-    return actionError("errors.createAccount");
+    // Database/trigger errors surface with these message patterns.
+    // Common cause: deleted user re-registers and auth.identities residue or
+    // the handle_new_user trigger fails on the profiles INSERT.
+    if (
+      error.message.toLowerCase().includes("database") ||
+      error.message.toLowerCase().includes("trigger") ||
+      error.message.toLowerCase().includes("profiles")
+    ) {
+      return actionError("auth.profileCreateFailed");
+    }
+    return actionError("auth.signupFailed");
   }
 
   // Email confirmation enabled: Supabase returns a fake-success (error=null,
@@ -67,6 +84,30 @@ export async function signUp(
   // avoid timing-based enumeration. Detect and surface it as a form error.
   if (!data.user || data.user.identities?.length === 0) {
     return actionError("auth.emailAlreadyUsed");
+  }
+
+  // Post-signup: verify handle_new_user trigger created the profiles row.
+  // The trigger has no exception handler — any failure rolls back auth.users
+  // too — but this check guards against unforeseen race conditions.
+  const { data: profileCheck } = await adminSupabase
+    .from("profiles")
+    .select("id")
+    .eq("id", data.user.id)
+    .single();
+
+  if (!profileCheck) {
+    // Trigger didn't fire or lost a race — attempt manual fallback creation
+    const { error: profileError } = await adminSupabase
+      .from("profiles")
+      .insert({ id: data.user.id, name });
+
+    if (profileError) {
+      console.error("[signUp] profile fallback creation failed:", {
+        code: profileError.code,
+        message: profileError.message,
+      });
+      return actionError("auth.profileCreateFailed");
+    }
   }
 
   if (!data.session) {

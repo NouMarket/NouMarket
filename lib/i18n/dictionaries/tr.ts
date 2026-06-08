@@ -216,6 +216,8 @@ export const tr: Dictionary = {
   "auth.expiredLink": "Bağlantı süresi doldu mu?",
   "auth.requestNewLink": "Yeni bağlantı iste",
   "auth.emailAlreadyUsed": "Bu e-posta adresi zaten kullanılıyor.",
+  "auth.profileCreateFailed": "Hesabınız oluşturuldu, ancak profil başlatılamadı. Destek ile iletişime geçin.",
+  "auth.signupFailed": "Hesap oluşturulamadı. Tekrar deneyin.",
 
   "listing.featured": "Öne çıkan",
   "listing.description": "Açıklama",
