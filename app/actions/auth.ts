@@ -66,6 +66,13 @@ export async function signUp(
       // Email confirmation disabled: Supabase surfaces the duplicate directly.
       return actionError("auth.emailAlreadyUsed");
     }
+    if (
+      error.code === "over_email_send_rate_limit" ||
+      error.status === 429 ||
+      error.message.toLowerCase().includes("email rate limit")
+    ) {
+      return actionError("auth.emailRateLimit");
+    }
     // Database/trigger errors surface with these message patterns.
     // Common cause: deleted user re-registers and auth.identities residue or
     // the handle_new_user trigger fails on the profiles INSERT.

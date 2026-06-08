@@ -214,6 +214,7 @@ export const fr = {
   "auth.expiredLink": "Lien expiré ?",
   "auth.requestNewLink": "Demander un nouveau lien",
   "auth.emailAlreadyUsed": "Cette adresse e-mail est déjà utilisée.",
+  "auth.emailRateLimit": "Trop d'e-mails ont été envoyés. Attendez quelques minutes avant de réessayer.",
   "auth.profileCreateFailed": "Votre compte a été créé, mais le profil n'a pas pu être initialisé. Contactez l'assistance.",
   "auth.signupFailed": "Le compte n'a pas pu être créé. Réessayez.",
 
