@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { BarChart2, ListChecks, Flag, HardDrive, ClipboardList, ShieldCheck } from "lucide-react";
+import { BarChart2, ListChecks, Flag, HardDrive, ClipboardList, ShieldCheck, Settings } from "lucide-react";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { translate } from "@/lib/i18n/translate";
 
 const NAV: Array<{ href: string; label: TranslationKey; icon: typeof BarChart2 }> = [
-  { href: "/admin", label: "admin.navDashboard", icon: BarChart2 },
-  { href: "/admin/pending", label: "admin.navListings", icon: ListChecks },
-  { href: "/admin/reports", label: "nav.reports", icon: Flag },
-  { href: "/admin/verifications", label: "nav.adminVerifications", icon: ShieldCheck },
-  { href: "/admin/storage", label: "admin.storage", icon: HardDrive },
-  { href: "/admin/beta-checklist", label: "admin.betaChecklist", icon: ClipboardList },
+  { href: "/admin",               label: "admin.navDashboard",    icon: BarChart2 },
+  { href: "/admin/pending",       label: "admin.navListings",     icon: ListChecks },
+  { href: "/admin/reports",       label: "nav.reports",           icon: Flag },
+  { href: "/admin/verifications", label: "nav.adminVerifications",icon: ShieldCheck },
+  { href: "/admin/storage",       label: "admin.storage",         icon: HardDrive },
+  { href: "/admin/beta-checklist",label: "admin.betaChecklist",   icon: ClipboardList },
+  { href: "/admin/operations",    label: "admin.navOperations",   icon: Settings },
 ];
 
 export default async function AdminNav({ current }: { current: string }) {
