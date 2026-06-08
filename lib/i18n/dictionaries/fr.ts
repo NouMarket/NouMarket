@@ -550,10 +550,12 @@ export const fr = {
   "admin.verifyConfirmReject": "Confirmer le rejet",
   "nav.adminVerifications": "Vérifications",
 
-  "notif.verification_approved.title": "Identité vérifiée",
-  "notif.verification_approved.body": "Votre demande de vérification a été approuvée.",
-  "notif.verification_rejected.title": "Vérification refusée",
-  "notif.verification_rejected.body": "Votre demande de vérification a été refusée.",
+  "notif.verification_approved.title": "Vérification approuvée",
+  "notif.verification_approved.body": "Votre profil a été vérifié.",
+  "notif.verification_rejected.title": "Vérification rejetée",
+  "notif.verification_rejected.body": "Votre demande de vérification a été rejetée.",
+  "notif.verification_rejected.note": "Motif : {note}",
+  "notif.unknown.title": "Notification",
 } as const;
 
 export type TranslationKey = keyof typeof fr;

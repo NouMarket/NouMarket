@@ -10,6 +10,8 @@ import {
   Heart,
   Flag,
   CheckCheck,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import type { NotificationRow } from "@/types/database";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
@@ -70,10 +72,28 @@ function getNotifContent(
         body: t("notif.listing_reported.body", { title: listingTitle }),
         icon: <Flag className="h-5 w-5 text-amber-500 shrink-0" />,
       };
+    case "verification_approved":
+      return {
+        title: t("notif.verification_approved.title"),
+        body: t("notif.verification_approved.body"),
+        icon: <ShieldCheck className="h-5 w-5 text-green-500 shrink-0" />,
+      };
+    case "verification_rejected": {
+      const rejectionNote = meta.rejectionNote;
+      const baseBody = t("notif.verification_rejected.body");
+      const body = rejectionNote
+        ? `${baseBody} ${t("notif.verification_rejected.note", { note: rejectionNote })}`
+        : baseBody;
+      return {
+        title: t("notif.verification_rejected.title"),
+        body,
+        icon: <ShieldAlert className="h-5 w-5 text-red-500 shrink-0" />,
+      };
+    }
     default:
       return {
-        title: n.title,
-        body: n.body,
+        title: n.title || t("notif.unknown.title"),
+        body: n.body || "",
         icon: <Bell className="h-5 w-5 text-gray-400 shrink-0" />,
       };
   }

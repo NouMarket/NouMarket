@@ -552,8 +552,10 @@ export const tr: Dictionary = {
   "admin.verifyConfirmReject": "Reddetmeyi onayla",
   "nav.adminVerifications": "Doğrulamalar",
 
-  "notif.verification_approved.title": "Kimlik doğrulandı",
-  "notif.verification_approved.body": "Doğrulama talebiniz onaylandı.",
+  "notif.verification_approved.title": "Doğrulama onaylandı",
+  "notif.verification_approved.body": "Profiliniz doğrulandı.",
   "notif.verification_rejected.title": "Doğrulama reddedildi",
   "notif.verification_rejected.body": "Doğrulama talebiniz reddedildi.",
+  "notif.verification_rejected.note": "Gerekçe: {note}",
+  "notif.unknown.title": "Bildirim",
 };

@@ -179,17 +179,24 @@ export async function notifyListingFavorited(
 /**
  * Notify a user when their verification request is approved or rejected.
  * Called from app/actions/verification.ts.
+ * @param note - Optional rejection reason; stored in metadata so the
+ *               notification renderer can display it without a DB join.
  */
 export async function notifyVerificationResult(
   userId: string,
-  approved: boolean
+  approved: boolean,
+  note?: string
 ): Promise<void> {
   await insertNotification(userId, {
     type: approved ? "verification_approved" : "verification_rejected",
-    title: "",
-    body: "",
+    // title/body are raw fallbacks for renderers that don't know the type.
+    // The notification components translate these via the type switch.
+    title: approved ? "Vérification approuvée" : "Vérification rejetée",
+    body: approved
+      ? "Votre profil a été vérifié."
+      : "Votre demande de vérification a été rejetée.",
     href: "/profile",
-    metadata: null,
+    metadata: !approved && note ? { rejectionNote: note } : null,
   });
 }
 

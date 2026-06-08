@@ -132,7 +132,7 @@ export async function rejectVerification(
     return { error: await actionError("errors.updateRetry") };
   }
 
-  await notifyVerificationResult(targetUserId, false);
+  await notifyVerificationResult(targetUserId, false, note.trim() || undefined);
   revalidatePath("/admin/verifications");
   return { success: true };
 }
